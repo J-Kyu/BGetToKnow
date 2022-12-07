@@ -1,6 +1,7 @@
 package com.kyu.BGetToKnowYou.controller;
 
 
+import com.kyu.BGetToKnowYou.DTO.RoomTicketDTO;
 import com.kyu.BGetToKnowYou.domain.RoomTicketDomain;
 import com.kyu.BGetToKnowYou.service.RoomTicketService;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +34,7 @@ public class RoomTicketController {
 
 
     @GetMapping(value="/roomTicket/findAll")
-    public List<RoomTicketDomain> GetAllRoomTickets(){
+    public List<RoomTicketDTO> GetAllRoomTickets(){
         return service.findAllRoomTickets();
     }
 }

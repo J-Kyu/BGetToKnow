@@ -3,6 +3,7 @@ package com.kyu.BGetToKnowYou.service;
 import com.kyu.BGetToKnowYou.domain.RoomDomain;
 import com.kyu.BGetToKnowYou.domain.UserDomain;
 import com.kyu.BGetToKnowYou.respository.RoomRepository;
+import com.kyu.BGetToKnowYou.respository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,8 +17,6 @@ public class RoomService {
 
 
     private final RoomRepository roomRepository;
-
-
 
     @Transactional
     public String join(RoomDomain room){
