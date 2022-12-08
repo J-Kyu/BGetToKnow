@@ -1,7 +1,9 @@
 package com.kyu.BGetToKnowYou.service;
 
+import com.kyu.BGetToKnowYou.DTO.RoomDTO;
 import com.kyu.BGetToKnowYou.DTO.RoomTicketDTO;
 import com.kyu.BGetToKnowYou.DTO.UserDTO;
+import com.kyu.BGetToKnowYou.domain.RoomDomain;
 import com.kyu.BGetToKnowYou.domain.RoomTicketDomain;
 import com.kyu.BGetToKnowYou.domain.UserDomain;
 import com.kyu.BGetToKnowYou.respository.UserRepository;
@@ -58,9 +60,25 @@ public class UserService {
         return roomTicketDTOList;
     }
 
-    public UserDTO findOne(Long userId) {
+    public UserDTO finUserDTO(Long userId) {
         UserDomain user = userRepository.findOne(userId);
         return new UserDTO(user);
+    }
+
+    public UserDomain findUserDomain(Long userId) {
+        return userRepository.findOne(userId);
+    }
+
+    public List<RoomDTO> findRoomByUserId(Long id){
+
+        UserDomain user = userRepository.findOne(id);
+
+        List<RoomDTO> roomDTOList = new ArrayList<>();
+        for ( RoomDomain room: user.getRooms() ) {
+            roomDTOList.add(new RoomDTO(room));
+        }
+
+        return roomDTOList;
     }
 
 }

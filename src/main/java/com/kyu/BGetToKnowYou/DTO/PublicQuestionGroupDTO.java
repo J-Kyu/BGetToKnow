@@ -4,4 +4,7 @@ import lombok.Getter;
 
 @Getter
 public class PublicQuestionGroupDTO {
+
+    private Long id;
+
 }

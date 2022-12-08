@@ -12,6 +12,8 @@ import javax.persistence.Enumerated;
 @Setter
 public class RoomForm {
 
+    private Long userId;
+
     @Enumerated(EnumType.STRING)
     private RoomTypeEnum roomType;
 

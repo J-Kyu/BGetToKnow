@@ -20,7 +20,13 @@ public class RoomTicketDomain {
     @JoinColumn(name = "user_id") //column table name
     private UserDomain user;
 
+    @OneToOne
+    @JoinColumn(name = "public_answer_group_id")
+    private PublicAnswerGroupDomain publicAnswerGroup;
 
 
+    @ManyToOne
+    @JoinColumn(name = "room_id")
+    private RoomDomain room;
 
 }

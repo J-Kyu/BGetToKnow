@@ -1,14 +1,19 @@
 package com.kyu.BGetToKnowYou.controller;
 
+import com.kyu.BGetToKnowYou.DTO.PublicQuestionDTO;
+import com.kyu.BGetToKnowYou.DTO.RoomDTO;
+import com.kyu.BGetToKnowYou.DTO.UserDTO;
 import com.kyu.BGetToKnowYou.domain.RoomDomain;
 import com.kyu.BGetToKnowYou.domain.RoomStateEnum;
 import com.kyu.BGetToKnowYou.domain.RoomTypeEnum;
 import com.kyu.BGetToKnowYou.domain.UserDomain;
 import com.kyu.BGetToKnowYou.service.RoomService;
+import com.kyu.BGetToKnowYou.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -21,6 +26,7 @@ import java.util.List;
 public class RoomController {
 
     private final RoomService roomService;
+    private final UserService userService;
 
     @PostMapping(value = "/room/new")
     public String create(@Valid RoomForm form, BindingResult result){
@@ -29,25 +35,29 @@ public class RoomController {
             return "redirect:/";
         }
 
-        RoomDomain room = new RoomDomain();
-        room.setRoomState(RoomStateEnum.PRE_MEETING);
-        room.setRoomType(form.getRoomType());
-        room.setMaxNum(form.getMaxNum());
+        RoomDTO roomDTO = new RoomDTO(form.getMaxNum());
 
-        String roomCode = roomService.join(room);
+        UserDomain userDomain = userService.findUserDomain(form.getUserId());
+
+        String roomCode = roomService.CreateRoom(roomDTO, userDomain);
 
         return roomCode;
     }
 
-    @GetMapping("/room/find")
-    public RoomDomain GetRoomByCode(String roomCode){
-        RoomDomain room = roomService.findRoomByCode(roomCode);
-        return room;
+    @GetMapping("/room/{code}/find")
+    public RoomDTO GetRoomByCode(@PathVariable("code")  String code){
+        return new RoomDTO(roomService.findRoomByCode(code));
     }
 
+    @GetMapping("/room/{code}/getPublicQuestions")
+    public List<PublicQuestionDTO> GetPublicQuestions(@PathVariable("code")  String code){
+        return roomService.GetPublicQuestions(code);
+    }
+
+
     @GetMapping("/room/findAll")
-    public List<RoomDomain> GetAllRoom(){
-        return roomService.findRooms();
+    public List<RoomDTO> GetAllRoom(){
+        return roomService.findAllRoomDTO();
     }
 
 

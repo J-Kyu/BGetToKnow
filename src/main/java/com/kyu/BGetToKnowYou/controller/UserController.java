@@ -1,6 +1,7 @@
 package com.kyu.BGetToKnowYou.controller;
 
 
+import com.kyu.BGetToKnowYou.DTO.RoomDTO;
 import com.kyu.BGetToKnowYou.DTO.RoomTicketDTO;
 import com.kyu.BGetToKnowYou.DTO.UserDTO;
 import com.kyu.BGetToKnowYou.domain.OAuthTypeEnum;
@@ -26,7 +27,6 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
-    private final RoomTicketService roomTicketService;
 
     @PostMapping("/user/new")
     public String create(@Valid UserForm form, BindingResult result){
@@ -51,11 +51,21 @@ public class UserController {
         return userService.findAllUsers();
     }
 
+    @GetMapping("/user/{userId}/find")
+    public UserDTO GetUserInfo(@PathVariable("userId") Long userId){
+        return userService.finUserDTO(userId);
+
+    }
+
     @GetMapping("/user/{userId}/roomTickets/findAll")
     public List<RoomTicketDTO> GetUserTickets(@PathVariable("userId") Long userId){
 
         return userService.findRoomTicketsByUserId(userId);
     }
 
+    @GetMapping("/user/{userId}/createdRoom")
+    public List<RoomDTO> GetCreatedRoomByUserId(@PathVariable("userId") Long userId){
+        return userService.findRoomByUserId(userId);
+    }
 
 }

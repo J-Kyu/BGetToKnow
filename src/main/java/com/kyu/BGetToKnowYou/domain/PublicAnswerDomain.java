@@ -16,4 +16,12 @@ public class PublicAnswerDomain {
 
     private String answer;
 
+    @OneToOne
+    @JoinColumn(name = "public_question_id")
+    private PublicQuestionDomain question;
+
+    @ManyToOne
+    @JoinColumn(name = "answer_group_id")
+    private PublicAnswerGroupDomain answerGroup;
+
 }

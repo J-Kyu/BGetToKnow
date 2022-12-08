@@ -29,6 +29,9 @@ public class UserDomain {
     @OneToMany(mappedBy = "user") //variable name
     private List<RoomTicketDomain> tickets = new ArrayList<>();
 
+    @OneToMany(mappedBy = "adminUser")
+    private List<RoomDomain> rooms = new ArrayList<>();
+
 //    private List<RoomTicketDomain> joinedRoomTickets;
 //
 //    private List<RoomTicketDomain> doneRoomTickets;

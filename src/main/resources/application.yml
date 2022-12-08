@@ -1,12 +1,14 @@
 spring:
   datasource:
     url: jdbc:h2:tcp://localhost/e:/Study/Project/BGetToKnow/BGetToKnow
+#    url: jdbc:h2:file:e:/Study/Project/BGetToKnow/BGetToKnow;AUTO_SERVER=true
     username: j-kyu
     password: password
     driver-class-name: org.h2.Driver
   jpa:
     hibernate:
-      ddl-auto: create
+#      ddl-auto: create
+       ddl-auto: update
     properties:
       hibernate:
         #     show_sql: true

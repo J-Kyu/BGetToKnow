@@ -2,6 +2,7 @@ package com.kyu.BGetToKnowYou.respository;
 
 import com.kyu.BGetToKnowYou.domain.RoomDomain;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -10,6 +11,7 @@ import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
+@Slf4j
 public class RoomRepository {
 
     @Autowired
@@ -21,7 +23,7 @@ public class RoomRepository {
 
     public RoomDomain findRoomByCode(String roomCode) {
 
-        return em. createQuery("select r from RoomDomain r where r.code = :roomCode", RoomDomain.class )
+        return em.createQuery("select r from RoomDomain r where r.code = :roomCode", RoomDomain.class )
                 .setParameter("roomCode", roomCode)
                 .getSingleResult();
     }

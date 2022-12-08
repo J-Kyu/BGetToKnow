@@ -6,5 +6,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class RoomTicketForm {
-//    private String
+    private String roomCode;
+    private Long userId;
+
 }

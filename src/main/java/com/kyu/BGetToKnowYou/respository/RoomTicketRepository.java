@@ -24,4 +24,11 @@ public class RoomTicketRepository {
                 .getResultList();
     }
 
+    public RoomTicketDomain findRoomTicketWithUserIdAndRoomId(Long userId, Long roomId){
+        return em.createQuery("select rt from RoomTicketDomain rt where rt.user.id = :userId and rt.room.id = :roomId", RoomTicketDomain.class)
+                .setParameter("userId", userId)
+                .setParameter("roomId", roomId)
+                .getSingleResult();
+    }
+
 }

@@ -24,4 +24,8 @@ public class PublicQuestionDomain {
     //question string
     private String question;
 
+    @ManyToOne
+    @JoinColumn(name = "public_question_group_id")
+    private PublicQuestionGroupDomain publicQuestionGroup;
+
 }
