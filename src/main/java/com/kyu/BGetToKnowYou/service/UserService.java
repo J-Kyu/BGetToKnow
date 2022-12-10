@@ -3,9 +3,11 @@ package com.kyu.BGetToKnowYou.service;
 import com.kyu.BGetToKnowYou.DTO.RoomDTO;
 import com.kyu.BGetToKnowYou.DTO.RoomTicketDTO;
 import com.kyu.BGetToKnowYou.DTO.UserDTO;
+import com.kyu.BGetToKnowYou.domain.OAuthTypeEnum;
 import com.kyu.BGetToKnowYou.domain.RoomDomain;
 import com.kyu.BGetToKnowYou.domain.RoomTicketDomain;
 import com.kyu.BGetToKnowYou.domain.UserDomain;
+import com.kyu.BGetToKnowYou.exception.NoneExistingRowException;
 import com.kyu.BGetToKnowYou.respository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,6 +30,18 @@ public class UserService {
         return user.getId();
     }
 
+    @Transactional
+    public Long createUser(UserDTO userDTO){
+
+        UserDomain user = new UserDomain(userDTO);
+
+        //check duplicated nickname
+        validateDuplicateUser(user);
+
+        userRepository.save(user);
+
+        return user.getId();
+    }
 
     private void validateDuplicateUser(UserDomain user){
         //EXCEPTION
@@ -42,16 +56,27 @@ public class UserService {
 
         List<UserDomain> userDomainsList =  userRepository.findAll();
         for (UserDomain user: userDomainsList ) {
-            UserDTO userDTO = new UserDTO(user);
+            UserDTO userDTO = new UserDTO();
+
             userDTOList.add(userDTO);
         }
 
         return userDTOList;
     }
 
-    public List<RoomTicketDTO> findRoomTicketsByUserId(Long id){
+    public List<RoomTicketDTO> findRoomTicketDTOListByUserId(Long id){
 
+        // Find User
         UserDomain user = userRepository.findOne(id);
+
+        //Exception Check
+        if (user == null){
+            throw new NoneExistingRowException("There is no User id: "+id);
+        }
+
+
+
+        // Search Room Ticket
         List<RoomTicketDTO> roomTicketDTOList = new ArrayList<>();
         for ( RoomTicketDomain ticket: user.getTickets() ) {
             roomTicketDTOList.add(new RoomTicketDTO(ticket));
@@ -66,13 +91,18 @@ public class UserService {
     }
 
     public UserDomain findUserDomain(Long userId) {
+
+        //find User
         return userRepository.findOne(userId);
+
     }
 
-    public List<RoomDTO> findRoomByUserId(Long id){
+    public List<RoomDTO> findRoomDTOByUserId(Long id){
 
+        // Find User
         UserDomain user = userRepository.findOne(id);
 
+        //Convert Room Domain into Room DTO
         List<RoomDTO> roomDTOList = new ArrayList<>();
         for ( RoomDomain room: user.getRooms() ) {
             roomDTOList.add(new RoomDTO(room));

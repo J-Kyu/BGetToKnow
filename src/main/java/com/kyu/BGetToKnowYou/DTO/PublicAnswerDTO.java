@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @Getter
-public class PublicAnswerDTO {
+public class PublicAnswerDTO  {
 
     public PublicAnswerDTO(){
 

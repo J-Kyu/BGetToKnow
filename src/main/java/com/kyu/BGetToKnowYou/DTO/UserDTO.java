@@ -2,9 +2,7 @@ package com.kyu.BGetToKnowYou.DTO;
 
 import com.kyu.BGetToKnowYou.domain.OAuthTypeEnum;
 import com.kyu.BGetToKnowYou.domain.UserDomain;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -12,6 +10,12 @@ import javax.persistence.Enumerated;
 @Getter
 public class UserDTO {
 
+    public UserDTO(){}
+
+    public UserDTO(String nickname, OAuthTypeEnum type){
+        this.nickname = nickname;
+        this.oAuthType = type;
+    }
     public UserDTO(UserDomain userDomain){
         this.id = userDomain.getId();
         this.nickname = userDomain.getNickname();
@@ -19,13 +23,13 @@ public class UserDTO {
         this.oAuthType = userDomain.getOAuthType();
     }
 
-    final private Long id;
+    private Long id;
 
-    final private String nickname;
+    private String nickname;
 
-    final private String hashCode;
+    private String hashCode;
 
     @Enumerated(EnumType.STRING)
-    final private OAuthTypeEnum oAuthType;
+    private OAuthTypeEnum oAuthType;
 
 }

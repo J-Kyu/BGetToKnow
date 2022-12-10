@@ -5,6 +5,7 @@ import com.kyu.BGetToKnowYou.domain.PublicAnswerGroupDomain;
 import com.kyu.BGetToKnowYou.domain.RoomDomain;
 import com.kyu.BGetToKnowYou.domain.RoomTicketDomain;
 import com.kyu.BGetToKnowYou.domain.UserDomain;
+import com.kyu.BGetToKnowYou.exception.NoneExistingRowException;
 import com.kyu.BGetToKnowYou.respository.RoomTicketRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -36,7 +37,13 @@ public class RoomTicketService {
     public List<RoomTicketDTO> findAllRoomTickets(){
 
         List<RoomTicketDTO> roomTicketDTOList = new ArrayList<>();
+
         List<RoomTicketDomain> roomTicketDomainList = roomTicketRepository.findAllRoomTickets();
+        //Exception Check
+        if (roomTicketDomainList == null){
+            throw new NoneExistingRowException("There is no Room Ticket Registered.");
+        }
+
         for (RoomTicketDomain ticket: roomTicketDomainList) {
             roomTicketDTOList.add(new RoomTicketDTO(ticket));
         }
@@ -57,12 +64,20 @@ public class RoomTicketService {
 
         //2. Search Room
         RoomDomain roomDomain = roomService.findRoomByCode(roomCode);
+        //Exception Check
+        if (roomDomain == null){
+            throw new NoneExistingRowException("There is no such Room code: "+roomCode);
+        }
 
         //3. Register Room to RoomTicket Domain
         roomTicketDomain.setRoom(roomDomain);
 
         //4. Search User Domain
         UserDomain userDomain = userService.findUserDomain(userId);
+        //Exception Check
+        if (userDomain == null){
+            throw new NoneExistingRowException("There is no User id: "+userId);
+        }
 
         //5. Register User Domain to Room Ticket Domain
         roomTicketDomain.setUser(userDomain);
@@ -81,7 +96,6 @@ public class RoomTicketService {
 
     public RoomTicketDomain findRoomTicketByUserId(Long userId, Long roomId){
         return roomTicketRepository.findRoomTicketWithUserIdAndRoomId(userId,roomId);
-
     }
 
 }

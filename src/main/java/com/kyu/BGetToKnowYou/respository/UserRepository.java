@@ -1,15 +1,19 @@
 package com.kyu.BGetToKnowYou.respository;
 
 import com.kyu.BGetToKnowYou.domain.UserDomain;
+import com.kyu.BGetToKnowYou.exception.NoneExistingRowException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
+@Slf4j
 public class UserRepository {
 
     @Autowired
@@ -17,7 +21,18 @@ public class UserRepository {
 
     public void save(UserDomain userDomain){ em.persist(userDomain);}
 
-    public UserDomain findOne(Long id) {return em.find(UserDomain.class, id);}
+    public UserDomain findOne(Long id) {
+        UserDomain userDomain = new UserDomain();
+
+        userDomain = em.find(UserDomain.class, id);
+
+        //prevent null
+        if (userDomain ==  null){
+            throw new NoneExistingRowException("No such user id: "+id);
+        }
+
+        return userDomain;
+    }
 
     public List<UserDomain> findAll(){
         return em.createQuery("select m from UserDomain m", UserDomain.class)

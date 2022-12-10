@@ -8,12 +8,14 @@ import com.kyu.BGetToKnowYou.domain.PublicQuestionDomain;
 import com.kyu.BGetToKnowYou.domain.PublicQuestionGroupDomain;
 import com.kyu.BGetToKnowYou.domain.RoomDomain;
 import com.kyu.BGetToKnowYou.domain.UserDomain;
+import com.kyu.BGetToKnowYou.exception.NoneExistingRowException;
 import com.kyu.BGetToKnowYou.respository.RoomRepository;
 import com.kyu.BGetToKnowYou.respository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.NoResultException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -43,6 +45,12 @@ public class RoomService {
 
     public List<RoomDTO> findAllRoomDTO(){
         List<RoomDomain> roomDomainList = roomRepository.findAll();
+
+        //Exception Check
+        if (roomDomainList == null){
+            throw new NoneExistingRowException("There is no Exist");
+        }
+
         List<RoomDTO> roomDTOList = new ArrayList<>();
 
         for (RoomDomain room: roomDomainList ) {
@@ -53,7 +61,9 @@ public class RoomService {
 
     public RoomDomain findOne(Long roomId) {return roomRepository.findOne(roomId);}
 
-    public RoomDomain findRoomByCode(String roomCode) {return roomRepository.findRoomByCode(roomCode);}
+    public RoomDomain findRoomByCode(String roomCode) {
+        return roomRepository.findRoomByCode(roomCode);
+    }
 
     private String GenerateRoomCode(int codeLength){
         int leftLimit = 97; // letter 'a'
@@ -73,6 +83,10 @@ public class RoomService {
     public List<PublicQuestionDTO> GetPublicQuestions(String code){
 
         RoomDomain room = this.findRoomByCode(code);
+        //Exception Check
+        if (room == null){
+            throw new NoneExistingRowException("There is no Room Code: "+code);
+        }
 
         PublicQuestionGroupDomain publicQuestionGroup = room.getQuestionGroup();
         List<PublicQuestionDTO> publicQuestionDTOList = new ArrayList<>();

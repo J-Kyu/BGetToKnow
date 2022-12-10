@@ -1,5 +1,6 @@
 package com.kyu.BGetToKnowYou.domain;
 
+import com.kyu.BGetToKnowYou.DTO.UserDTO;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,14 @@ import java.util.List;
 @Slf4j
 
 public class UserDomain {
+
+    public UserDomain(){}
+
+    public UserDomain(UserDTO userDTO){
+        this.oAuthType = userDTO.getOAuthType();
+        this.hashCode = userDTO.getHashCode();
+        this.nickname = userDTO.getNickname();
+    }
 
     @Id @GeneratedValue
     @Column(name="user_id")
@@ -32,16 +41,8 @@ public class UserDomain {
     @OneToMany(mappedBy = "adminUser")
     private List<RoomDomain> rooms = new ArrayList<>();
 
-//    private List<RoomTicketDomain> joinedRoomTickets;
-//
-//    private List<RoomTicketDomain> doneRoomTickets;
-
-
     public void AddRoomTicket(RoomTicketDomain ticket){
         this.tickets.add(ticket);
     }
-
-
-
 
 }

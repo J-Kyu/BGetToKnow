@@ -1,11 +1,13 @@
 package com.kyu.BGetToKnowYou.respository;
 
 import com.kyu.BGetToKnowYou.domain.RoomTicketDomain;
+import com.kyu.BGetToKnowYou.exception.NoneExistingRowException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import java.util.List;
 
 @Repository
@@ -25,10 +27,20 @@ public class RoomTicketRepository {
     }
 
     public RoomTicketDomain findRoomTicketWithUserIdAndRoomId(Long userId, Long roomId){
-        return em.createQuery("select rt from RoomTicketDomain rt where rt.user.id = :userId and rt.room.id = :roomId", RoomTicketDomain.class)
-                .setParameter("userId", userId)
-                .setParameter("roomId", roomId)
-                .getSingleResult();
+
+        RoomTicketDomain roomTicketDomain = new RoomTicketDomain();
+
+        try{
+            roomTicketDomain = em.createQuery("select rt from RoomTicketDomain rt where rt.user.id = :userId and rt.room.id = :roomId", RoomTicketDomain.class)
+                    .setParameter("userId", userId)
+                    .setParameter("roomId", roomId)
+                    .getSingleResult();
+        }
+        catch (NoResultException e){
+            throw new NoneExistingRowException("No Room Ticket with userId: "+userId +" roomId: "+roomId);
+        }
+
+        return roomTicketDomain;
     }
 
 }

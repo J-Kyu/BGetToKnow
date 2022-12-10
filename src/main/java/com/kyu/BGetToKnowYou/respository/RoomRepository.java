@@ -1,12 +1,14 @@
 package com.kyu.BGetToKnowYou.respository;
 
 import com.kyu.BGetToKnowYou.domain.RoomDomain;
+import com.kyu.BGetToKnowYou.exception.NoneExistingRowException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import java.util.List;
 
 @Repository
@@ -23,9 +25,19 @@ public class RoomRepository {
 
     public RoomDomain findRoomByCode(String roomCode) {
 
-        return em.createQuery("select r from RoomDomain r where r.code = :roomCode", RoomDomain.class )
-                .setParameter("roomCode", roomCode)
-                .getSingleResult();
+        RoomDomain roomDomain = new RoomDomain();
+
+        try {
+            roomDomain = em.createQuery("select r from RoomDomain r where r.code = :roomCode", RoomDomain.class)
+                    .setParameter("roomCode", roomCode)
+                    .getSingleResult();
+        }
+        catch (NoResultException e){
+            throw new NoneExistingRowException("There is no such room code: "+roomCode);
+        }
+
+        return roomDomain;
+
     }
 
 
