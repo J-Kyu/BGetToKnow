@@ -4,6 +4,7 @@ package com.kyu.BGetToKnowYou.controller;
 import com.kyu.BGetToKnowYou.DTO.RoomDTO;
 import com.kyu.BGetToKnowYou.DTO.RoomTicketDTO;
 import com.kyu.BGetToKnowYou.DTO.UserDTO;
+import com.kyu.BGetToKnowYou.component.SessionManager;
 import com.kyu.BGetToKnowYou.domain.OAuthTypeEnum;
 import com.kyu.BGetToKnowYou.domain.UserDomain;
 import com.kyu.BGetToKnowYou.exception.NoneExistingRowException;
@@ -11,11 +12,15 @@ import com.kyu.BGetToKnowYou.response.BasicResponse;
 import com.kyu.BGetToKnowYou.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,10 +30,12 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class UserController {
 
     private final UserService userService;
+
+    private final SessionManager sessionManager;
 
     @GetMapping("/test")
     public ResponseEntity test(){
@@ -111,6 +118,7 @@ public class UserController {
     }
 
 
+
     @GetMapping("/user/{userId}/find")
     @CrossOrigin(origins = "http://localhost:3000")
     public ResponseEntity<BasicResponse> GetUserInfo(@PathVariable("userId") Long userId){
@@ -119,6 +127,7 @@ public class UserController {
 
         try {
             UserDTO userDTO = userService.finUserDTO(userId);
+
             response = BasicResponse.builder()
                     .code(200)
                     .httpStatus(HttpStatus.OK)
@@ -137,6 +146,70 @@ public class UserController {
 
         return new ResponseEntity<>(response,response.getHttpStatus());
     }
+
+
+
+
+    @GetMapping("/cookie/save")
+    public ResponseEntity<BasicResponse> SaveCookie(HttpServletResponse response){
+
+        BasicResponse responseBody = new BasicResponse();
+
+        String sessionId = sessionManager.createSession("1",response);
+        log.info("Session Created: "+sessionId);
+
+        return new ResponseEntity<>(responseBody,HttpStatus.OK);
+
+
+    }
+
+    @GetMapping("/cookie/load")
+    public ResponseEntity<BasicResponse> LoadCookie(HttpServletResponse response, HttpServletRequest request){
+
+        BasicResponse responseBody = new BasicResponse();
+
+
+        if (request.getCookies() == null){
+            log.info("No Cookie exist....");
+            return new ResponseEntity<>(responseBody,HttpStatus.OK);
+
+        }
+        List<Cookie> list = List.of(request.getCookies());
+
+        for (Cookie cookie: list ) {
+            log.info(cookie.getName()+ " : "+ cookie.getValue());
+        }
+
+        return new ResponseEntity<>(responseBody,HttpStatus.OK);
+
+    }
+
+
+    @GetMapping("/cookie/remove")
+    public ResponseEntity<BasicResponse> RemoveCookie(HttpServletResponse response, HttpServletRequest request){
+
+        BasicResponse responseBody = new BasicResponse();
+
+
+        // return response entity
+        if (sessionManager.expire(request)){
+            log.info("Removed Success");
+        }
+        else {
+            log.info("Remove Failure");
+        }
+
+        Cookie cookie = new Cookie(SessionManager.SESSION_COOKIE_NAME, null);
+        cookie.setMaxAge(0);
+        cookie.setPath("/");
+        response.addCookie(cookie);
+
+        return new ResponseEntity<>(responseBody,HttpStatus.OK);
+
+    }
+
+
+
 
     @GetMapping("/user/{userId}/roomTickets/findAll")
     public ResponseEntity<BasicResponse> GetUserTickets(@PathVariable("userId") Long userId){
