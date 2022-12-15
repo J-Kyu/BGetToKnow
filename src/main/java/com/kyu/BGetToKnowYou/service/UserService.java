@@ -90,6 +90,11 @@ public class UserService {
         return new UserDTO(user);
     }
 
+    public UserDTO finUserDTOByUUID(String uuid) {
+        UserDomain user = userRepository.findByUUID(uuid);
+        return new UserDTO(user);
+    }
+
     public UserDomain findUserDomain(Long userId) {
 
         //find User

@@ -45,4 +45,19 @@ public class UserRepository {
                 .getResultList();
     }
 
+    public UserDomain findByUUID(String uuid){
+        UserDomain userDomain = new UserDomain();
+
+        try {
+            userDomain = em.createQuery("select m from UserDomain m where m.uuid = :uuid", UserDomain.class)
+                    .setParameter("uuid", uuid)
+                    .getSingleResult();
+        }
+        catch (NoResultException e){
+            throw new NoneExistingRowException("There is no user with given UUID: "+ uuid);
+        }
+        return userDomain;
+
+    }
+
 }

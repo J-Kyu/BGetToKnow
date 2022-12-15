@@ -1,5 +1,6 @@
 package com.kyu.BGetToKnowYou.DTO;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.kyu.BGetToKnowYou.domain.OAuthTypeEnum;
 import com.kyu.BGetToKnowYou.domain.UserDomain;
 import lombok.*;
@@ -12,22 +13,24 @@ public class UserDTO {
 
     public UserDTO(){}
 
-    public UserDTO(String nickname, OAuthTypeEnum type){
+    public UserDTO(String nickname, OAuthTypeEnum type, String uuid){
         this.nickname = nickname;
         this.oAuthType = type;
+        this.uuid = uuid;
     }
     public UserDTO(UserDomain userDomain){
         this.id = userDomain.getId();
         this.nickname = userDomain.getNickname();
-        this.hashCode = userDomain.getHashCode();
+        this.uuid = userDomain.getUuid();
         this.oAuthType = userDomain.getOAuthType();
     }
 
+    @JsonIgnore
     private Long id;
 
     private String nickname;
 
-    private String hashCode;
+    private String uuid;
 
     @Enumerated(EnumType.STRING)
     private OAuthTypeEnum oAuthType;

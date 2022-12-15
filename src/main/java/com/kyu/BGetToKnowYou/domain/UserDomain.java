@@ -20,7 +20,7 @@ public class UserDomain {
 
     public UserDomain(UserDTO userDTO){
         this.oAuthType = userDTO.getOAuthType();
-        this.hashCode = userDTO.getHashCode();
+        this.uuid = userDTO.getUuid();
         this.nickname = userDTO.getNickname();
     }
 
@@ -33,7 +33,7 @@ public class UserDomain {
 
     private String nickname;
 
-    private String hashCode;
+    private String uuid;
 
     @OneToMany(mappedBy = "user") //variable name
     private List<RoomTicketDomain> tickets = new ArrayList<>();

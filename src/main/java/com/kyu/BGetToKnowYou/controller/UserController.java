@@ -18,9 +18,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.Basic;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.util.Arrays;
 import java.util.Collections;
@@ -35,12 +37,9 @@ public class UserController {
 
     private final UserService userService;
 
-    private final SessionManager sessionManager;
+    private int expireTime = 60*30;
 
-    @GetMapping("/test")
-    public ResponseEntity test(){
-        return new ResponseEntity(HttpStatus.OK);
-    }
+//    private final SessionManager sessionManager;
 
     @PostMapping("/user/new")
     public ResponseEntity<BasicResponse> create(@Valid UserForm form, BindingResult result){
@@ -61,7 +60,7 @@ public class UserController {
 
 
 
-        UserDTO userDTO = new UserDTO(form.getNickname(),OAuthTypeEnum.DEFAULT);
+        UserDTO userDTO = new UserDTO(form.getNickname(),form.getOAuthType(),form.getUuid());
 
         try {
             userService.createUser(userDTO);
@@ -120,7 +119,6 @@ public class UserController {
 
 
     @GetMapping("/user/{userId}/find")
-    @CrossOrigin(origins = "http://localhost:3000")
     public ResponseEntity<BasicResponse> GetUserInfo(@PathVariable("userId") Long userId){
 
         BasicResponse response = new BasicResponse();
@@ -148,15 +146,190 @@ public class UserController {
     }
 
 
+    @GetMapping("/user/load")
+    public ResponseEntity<BasicResponse> LoadUserInfo(HttpServletRequest request){
+
+        BasicResponse response = new BasicResponse();
+
+        // 0. Check Session Exist
+        HttpSession session = request.getSession(false);
+        if (session == null){
+            // no available session
+            log.info("Session does not exist");
+
+            response = BasicResponse.builder()
+                    .code(404)
+                    .httpStatus(HttpStatus.NOT_FOUND)
+                    .message("Session 정보가 없습니다")
+                    .result(Collections.emptyList())
+                    .build();
+        }
+
+        // 1. If Exist, check is valid one
+        else if (session.getAttribute("SESSION_ID") != null){
+            log.info("Session exist");
+            // 0.Check Cookie
+            UserDTO userDTO = (UserDTO) session.getAttribute("SESSION_ID");
+            log.info("Already Signed In-"+userDTO.getNickname());
+
+            response = BasicResponse.builder()
+                    .code(200)
+                    .httpStatus(HttpStatus.OK)
+                    .message("Session 조회 성공")
+                    .result(Arrays.asList(userDTO))
+                    .build();
+        }
+        //invalid session
+        else{
+            log.info("Invalid Session");
+
+            response = BasicResponse.builder()
+                    .code(404)
+                    .httpStatus(HttpStatus.NOT_FOUND)
+                    .message("유효 하지 않는 Session 입니다")
+                    .result(Collections.emptyList())
+                    .build();
+        }
+
+
+        return new ResponseEntity<>(response,response.getHttpStatus());
+    }
+
+
+    @PostMapping("/user/logIn")
+    public ResponseEntity<BasicResponse> UserLogIn(UserForm form, BindingResult result, HttpServletRequest request){
+        BasicResponse response = new BasicResponse();
+
+        String uuid = "";
+
+        //Incorrect form data
+        if (result.hasErrors()){
+            response = BasicResponse.builder()
+                    .code(200)
+                    .httpStatus(HttpStatus.OK)
+                    .message("Input Form 오류: "+result.toString())
+                    .result(Collections.emptyList())
+                    .build();
+            return new ResponseEntity<>(response,response.getHttpStatus());
+        }
+
+        //Sign In
+        try {
+            // 1. get uuid and userDTO
+            uuid = form.getOAuthType().toString() + "_" + form.getUuid();
+            log.info(uuid);
+            UserDTO userDTO = userService.finUserDTOByUUID(uuid);
+
+            //create session
+            HttpSession session = request.getSession(true);
+            session.setAttribute("SESSION_ID",userDTO);
+            session.setMaxInactiveInterval(expireTime); //30 seconds
+            log.info("First Sign In-"+userDTO.getNickname());
+
+
+            response = BasicResponse.builder()
+                        .code(200)
+                        .httpStatus(HttpStatus.OK)
+                        .message("로그인 성공")
+                        .result(Arrays.asList(userDTO))
+                        .build();
+        }
+        catch (NoneExistingRowException e){
+            // 2. If given uuid not existing, let's SIGN UP
+
+            uuid = form.getOAuthType().toString()+"_"+form.getUuid();
+            UserDTO userDTO = new UserDTO(form.getNickname(),form.getOAuthType(),uuid);
+            userService.createUser(userDTO);
+
+            //create session id
+            HttpSession session = request.getSession(true);
+            session.setAttribute("SESSION_ID",userDTO);
+            session.setMaxInactiveInterval(expireTime); //30 seconds
+
+            log.info("New Sign Up-"+userDTO.getNickname());
+
+
+            response = BasicResponse.builder()
+                    .code(200)
+                    .httpStatus(HttpStatus.OK)
+                    .message("회원 생성 성공")
+                    .result(Arrays.asList(userDTO))
+                    .build();
+
+        }
+        catch (NullPointerException e){
+
+            //ERROR
+            response = BasicResponse.builder()
+                    .code(200)
+                    .message("로그인 실패. "+e.getMessage() )
+                    .httpStatus(HttpStatus.OK)
+                    .result(Collections.emptyList())
+                    .build();
+        }
+
+        return new ResponseEntity<>(response,response.getHttpStatus());
+
+
+   }
+
+    @PostMapping("/user/logOut")
+    public ResponseEntity<BasicResponse> UserLogOut(UserForm form, BindingResult result, HttpServletRequest request){
+        BasicResponse response = new BasicResponse();
+
+        //Sign Out
+        try {
+            UserDTO userDTO = new UserDTO();
+            HttpSession session = request.getSession(false);
+
+            if (session != null) {
+                // If Session Info Exist
+                userDTO= (UserDTO) session.getAttribute("SESSION_ID");
+
+                //invalidate session info
+                session.invalidate();
+
+                log.info("Sign Out from "+userDTO.getNickname());
+            }
+
+            response = BasicResponse.builder()
+                    .code(200)
+                    .httpStatus(HttpStatus.OK)
+                    .message("로그아웃 성공")
+                    .result(Collections.emptyList())
+                    .build();
+        }
+        catch (NullPointerException e){
+
+            //ERROR
+            response = BasicResponse.builder()
+                    .code(200)
+                    .message("로그아웃 실패. "+e.getMessage() )
+                    .httpStatus(HttpStatus.OK)
+                    .result(Collections.emptyList())
+                    .build();
+        }
+
+        return new ResponseEntity<>(response,response.getHttpStatus());
+
+
+    }
 
 
     @GetMapping("/cookie/save")
-    public ResponseEntity<BasicResponse> SaveCookie(HttpServletResponse response){
+    public ResponseEntity<BasicResponse> SaveCookie(HttpServletResponse response,  HttpServletRequest request){
 
         BasicResponse responseBody = new BasicResponse();
 
-        String sessionId = sessionManager.createSession("1",response);
-        log.info("Session Created: "+sessionId);
+        HttpSession session = request.getSession();
+        session.setAttribute("SESSION_ID","119");
+        session.setMaxInactiveInterval(expireTime); //30 seconds
+
+
+        log.info("### Save Cookie ###");
+        log.info(session.getId());
+        log.info(session.getAttribute("SESSION_ID").toString());
+        log.info("###################");
 
         return new ResponseEntity<>(responseBody,HttpStatus.OK);
 
@@ -167,7 +340,20 @@ public class UserController {
     public ResponseEntity<BasicResponse> LoadCookie(HttpServletResponse response, HttpServletRequest request){
 
         BasicResponse responseBody = new BasicResponse();
+        HttpSession session = request.getSession(false);
 
+
+        if (session == null){
+            log.info("No Session exist....");
+            return new ResponseEntity<>(responseBody,HttpStatus.OK);
+
+        }
+
+        log.info("#### Cookie Load ####");
+        log.info(session.getId());
+        String userId = session.getAttribute("SESSION_ID").toString();
+        log.info(userId);
+        log.info("#####################");
 
         if (request.getCookies() == null){
             log.info("No Cookie exist....");
@@ -189,26 +375,30 @@ public class UserController {
     public ResponseEntity<BasicResponse> RemoveCookie(HttpServletResponse response, HttpServletRequest request){
 
         BasicResponse responseBody = new BasicResponse();
+        HttpSession session = request.getSession(false);
+        if (session != null){
 
-
-        // return response entity
-        if (sessionManager.expire(request)){
-            log.info("Removed Success");
-        }
-        else {
-            log.info("Remove Failure");
+            //invalidate session info
+            session.invalidate();
+            log.info("Remove Session");
         }
 
-        Cookie cookie = new Cookie(SessionManager.SESSION_COOKIE_NAME, null);
+        //Remove from client: set cookie to null
+        Cookie cookie = new Cookie("JSESSIONID", null);
         cookie.setMaxAge(0);
         cookie.setPath("/");
         response.addCookie(cookie);
+
+
 
         return new ResponseEntity<>(responseBody,HttpStatus.OK);
 
     }
 
-
+    @GetMapping("/test")
+    public String Test(){
+        return "redirect:/";
+    }
 
 
     @GetMapping("/user/{userId}/roomTickets/findAll")
