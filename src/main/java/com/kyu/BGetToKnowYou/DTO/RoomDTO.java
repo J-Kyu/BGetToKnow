@@ -13,9 +13,9 @@ import javax.persistence.Enumerated;
 @Setter
 public class RoomDTO {
 
-    public RoomDTO(int maxNum){
+    public RoomDTO(int maxNum, RoomTypeEnum roomType){
         this.roomState = RoomStateEnum.PRE_MEETING;
-        this.roomType = RoomTypeEnum.TYPE_A;
+        this.roomType = roomType;
         this.maxNum = maxNum;
     }
 

@@ -16,12 +16,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -29,16 +29,34 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
+@CrossOrigin(origins = {"http://localhost:3000","http://192.168.35.57:3000"}, allowCredentials = "true")
 public class RoomController {
 
     private final RoomService roomService;
     private final UserService userService;
 
     @PostMapping(value = "/room/new")
-    public ResponseEntity<BasicResponse> create(@Valid RoomForm form, BindingResult result){
+    public ResponseEntity<BasicResponse> create(@Valid RoomForm form, BindingResult result, HttpServletRequest request){
 
         BasicResponse response = new BasicResponse();
 
+        // 0. check available session
+        HttpSession session = request.getSession(false);
+        if (session == null){
+            // no available session
+            log.info("Session does not exist");
+
+            response = BasicResponse.builder()
+                    .code(404)
+                    .httpStatus(HttpStatus.NOT_FOUND)
+                    .message("Session 정보가 없습니다")
+                    .result(Collections.emptyList())
+                    .build();
+
+            return new ResponseEntity<>(response,response.getHttpStatus());
+        }
+
+        // 0. Check Input Form
         if (result.hasErrors()){
 
             response = BasicResponse.builder()
@@ -51,9 +69,15 @@ public class RoomController {
         }
 
 
-        RoomDTO roomDTO = new RoomDTO(form.getMaxNum());
         try{
-            UserDomain userDomain = userService.findUserDomain(form.getUserId());
+            //create User DTO with Session Info
+            UserDTO userDTO = (UserDTO) session.getAttribute("SESSION_ID");
+
+            //create Room DTO
+            RoomDTO roomDTO = new RoomDTO(form.getMaxNum(),form.getRoomType());
+
+
+            UserDomain userDomain = userService.findUserDomain(userDTO.getId());
             String roomCode = roomService.CreateRoom(roomDTO, userDomain);
 
             response = BasicResponse.builder()
@@ -125,17 +149,37 @@ public class RoomController {
         }
 
     @GetMapping("/room/{code}/getPublicQuestions")
-    public ResponseEntity<BasicResponse> GetPublicQuestions(@PathVariable("code")  String code){
+    public ResponseEntity<BasicResponse> GetPublicQuestions(@PathVariable("code")  String code, HttpServletRequest request){
 
         BasicResponse response = new BasicResponse();
 
+        // 0. check available session
+        HttpSession session = request.getSession(false);
+        if (session == null){
+            // no available session
+            log.info("Session does not exist");
+
+            response = BasicResponse.builder()
+                    .code(404)
+                    .httpStatus(HttpStatus.NOT_FOUND)
+                    .message("Session 정보가 없습니다")
+                    .result(Collections.emptyList())
+                    .build();
+
+            return new ResponseEntity<>(response,response.getHttpStatus());
+        }
+
+
         try {
             List<PublicQuestionDTO> publicQuestionDTOList = roomService.GetPublicQuestions(code);
+
+            log.info("Get Public Questions-->");
+
             response = BasicResponse.builder()
                     .code(200)
                     .message("Public Questions 조회 성공")
                     .httpStatus(HttpStatus.OK)
-                    .result(Arrays.asList(publicQuestionDTOList))
+                    .result(new ArrayList<>(publicQuestionDTOList))
                     .build();
         }
         catch (NoneExistingRowException e){

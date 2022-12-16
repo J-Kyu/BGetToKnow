@@ -1,5 +1,6 @@
 package com.kyu.BGetToKnowYou.DTO;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.kyu.BGetToKnowYou.domain.PublicQuestionDomain;
 import com.kyu.BGetToKnowYou.domain.PublicQuestionTypeEnum;
 import lombok.Getter;
@@ -19,6 +20,7 @@ public class PublicQuestionDTO {
         this.question = question.getQuestion();
     }
 
+    @JsonIgnore
     private Long id;
 
     //type

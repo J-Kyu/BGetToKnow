@@ -32,7 +32,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost:3000","http://192.168.35.57:3000"}, allowCredentials = "true")
 public class UserController {
 
     private final UserService userService;
@@ -225,6 +225,7 @@ public class UserController {
             session.setAttribute("SESSION_ID",userDTO);
             session.setMaxInactiveInterval(expireTime); //30 seconds
             log.info("First Sign In-"+userDTO.getNickname());
+            log.info("Session ID: "+session.getId());
 
 
             response = BasicResponse.builder()
@@ -274,7 +275,7 @@ public class UserController {
    }
 
     @PostMapping("/user/logOut")
-    public ResponseEntity<BasicResponse> UserLogOut(UserForm form, BindingResult result, HttpServletRequest request){
+    public ResponseEntity<BasicResponse> UserLogOut(UserForm form, BindingResult result,  HttpServletRequest request){
         BasicResponse response = new BasicResponse();
 
         //Sign Out
