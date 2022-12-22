@@ -26,4 +26,10 @@ public class PublicAnswerGroupDomain {
     private PublicQuestionGroupDomain publicQuestionGroup;
 
 
+    public void CreateAnswer(PublicQuestionDomain question){
+        PublicAnswerDomain answerDomain = new PublicAnswerDomain();
+        answerDomain.setQuestion(question);
+        this.answers.add(answerDomain);
+    }
+
 }

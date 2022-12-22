@@ -19,4 +19,6 @@ public class RoomForm {
 
     private int maxNum;
 
+    private String releaseDateTime;
+
 }

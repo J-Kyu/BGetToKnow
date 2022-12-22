@@ -1,6 +1,7 @@
 package com.kyu.BGetToKnowYou.respository;
 
 import com.kyu.BGetToKnowYou.domain.RoomDomain;
+import com.kyu.BGetToKnowYou.exception.NoRoomFoundException;
 import com.kyu.BGetToKnowYou.exception.NoneExistingRowException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +34,7 @@ public class RoomRepository {
                     .getSingleResult();
         }
         catch (NoResultException e){
-            throw new NoneExistingRowException("There is no such room code: "+roomCode);
+            throw new NoRoomFoundException("There is no such room code: "+roomCode);
         }
 
         return roomDomain;

@@ -16,6 +16,8 @@ public class PublicAnswerDomain {
 
     private String answer;
 
+    private int score = 0;
+
     @OneToOne
     @JoinColumn(name = "public_question_id")
     private PublicQuestionDomain question;

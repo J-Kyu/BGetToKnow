@@ -39,8 +39,6 @@ public class UserController {
 
     private int expireTime = 60*30;
 
-//    private final SessionManager sessionManager;
-
     @PostMapping("/user/new")
     public ResponseEntity<BasicResponse> create(@Valid UserForm form, BindingResult result){
 

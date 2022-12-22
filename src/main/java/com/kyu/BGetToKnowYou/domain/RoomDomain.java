@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +18,8 @@ public class RoomDomain {
         this.roomState = room.getRoomState();
         this.roomType = room.getRoomType();
         this.maxNum = room.getMaxNum();
+        this.genDateTime = LocalDateTime.now();
+        this.releaseDateTime = room.getReleaseDateTime();
     }
 
     public RoomDomain(){
@@ -36,6 +39,10 @@ public class RoomDomain {
     private RoomTypeEnum roomType;
 
     private int maxNum;
+
+    private LocalDateTime genDateTime;
+
+    private LocalDateTime releaseDateTime;
 
     @ManyToOne
     @JoinColumn(name = "admin_user_id")

@@ -7,6 +7,7 @@ import com.kyu.BGetToKnowYou.domain.RoomDomain;
 import com.kyu.BGetToKnowYou.domain.RoomStateEnum;
 import com.kyu.BGetToKnowYou.domain.RoomTypeEnum;
 import com.kyu.BGetToKnowYou.domain.UserDomain;
+import com.kyu.BGetToKnowYou.exception.NoRoomFoundException;
 import com.kyu.BGetToKnowYou.exception.NoneExistingRowException;
 import com.kyu.BGetToKnowYou.response.BasicResponse;
 import com.kyu.BGetToKnowYou.service.RoomService;
@@ -60,8 +61,8 @@ public class RoomController {
         if (result.hasErrors()){
 
             response = BasicResponse.builder()
-                    .code(200)
-                    .httpStatus(HttpStatus.OK)
+                    .code(400)
+                    .httpStatus(HttpStatus.BAD_REQUEST)
                     .message("Input Form 오류: "+result.toString())
                     .result(Collections.emptyList())
                     .build();
@@ -74,7 +75,7 @@ public class RoomController {
             UserDTO userDTO = (UserDTO) session.getAttribute("SESSION_ID");
 
             //create Room DTO
-            RoomDTO roomDTO = new RoomDTO(form.getMaxNum(),form.getRoomType());
+            RoomDTO roomDTO = new RoomDTO(form.getMaxNum(),form.getRoomType(),form.getReleaseDateTime());
 
 
             UserDomain userDomain = userService.findUserDomain(userDTO.getId());
@@ -90,16 +91,16 @@ public class RoomController {
         }
         catch (NoneExistingRowException e){
             response = BasicResponse.builder()
-                    .code(200)
-                    .httpStatus(HttpStatus.OK)
+                    .code(400)
+                    .httpStatus(HttpStatus.BAD_REQUEST)
                     .message("Room 생성 실패. 존재하지 않는 회원 ID 입니다."+e.getMessage())
                     .result(Collections.emptyList())
                     .build();
         }
         catch (Exception e){
             response = BasicResponse.builder()
-                    .code(200)
-                    .httpStatus(HttpStatus.OK)
+                    .code(400)
+                    .httpStatus(HttpStatus.BAD_REQUEST)
                     .message("알수없는 Error 발생. "+e.getMessage())
                     .result(Collections.emptyList())
                     .build();
@@ -135,11 +136,11 @@ public class RoomController {
                     .result(Arrays.asList(roomDTO))
                     .build();
         }
-        catch(NullPointerException e){
+        catch (NoRoomFoundException | NullPointerException e){
             response = BasicResponse.builder()
-                    .code(200)
-                    .message("Room 조회 실패. 존재하지 않는 Room입니다.")
-                    .httpStatus(HttpStatus.OK)
+                    .code(400)
+                    .message("Room 조회 실패. "+e.getMessage())
+                    .httpStatus(HttpStatus.BAD_REQUEST)
                     .result(Collections.emptyList())
                     .build();
         }

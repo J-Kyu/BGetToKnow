@@ -1,6 +1,7 @@
 package com.kyu.BGetToKnowYou.respository;
 
 import com.kyu.BGetToKnowYou.domain.RoomTicketDomain;
+import com.kyu.BGetToKnowYou.exception.NoRoomTicketFoundException;
 import com.kyu.BGetToKnowYou.exception.NoneExistingRowException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +38,9 @@ public class RoomTicketRepository {
                     .getSingleResult();
         }
         catch (NoResultException e){
+            throw new NoRoomTicketFoundException("No such ticket for given user");
+        }
+        catch (NoRoomTicketFoundException e){
             throw new NoneExistingRowException("No Room Ticket with userId: "+userId +" roomId: "+roomId);
         }
 

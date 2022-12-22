@@ -1,12 +1,13 @@
 package com.kyu.BGetToKnowYou.controller;
 
 
-import com.kyu.BGetToKnowYou.DTO.PublicAnswerDTO;
-import com.kyu.BGetToKnowYou.DTO.PublicQuestionDTO;
-import com.kyu.BGetToKnowYou.DTO.RoomTicketDTO;
+import com.kyu.BGetToKnowYou.DTO.*;
 import com.kyu.BGetToKnowYou.domain.*;
+import com.kyu.BGetToKnowYou.exception.NoRoomFoundException;
+import com.kyu.BGetToKnowYou.exception.NoRoomTicketFoundException;
 import com.kyu.BGetToKnowYou.exception.NoneExistingRowException;
 import com.kyu.BGetToKnowYou.response.BasicResponse;
+import com.kyu.BGetToKnowYou.service.PublicAnswerGroupService;
 import com.kyu.BGetToKnowYou.service.RoomService;
 import com.kyu.BGetToKnowYou.service.RoomTicketService;
 import com.kyu.BGetToKnowYou.service.UserService;
@@ -15,12 +16,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.NoResultException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,11 +30,13 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
+@CrossOrigin(origins = {"http://localhost:3000","http://192.168.35.57:3000"}, allowCredentials = "true")
 public class RoomTicketController {
 
     private final RoomTicketService roomTicketService;
     private final RoomService roomService;
 
+    private final PublicAnswerGroupService publicAnswerGroupService;
     private final UserService userService;
 
     @PostMapping(value="/roomTicket/new")
@@ -53,12 +55,12 @@ public class RoomTicketController {
         }
 
         try {
-            Long roomTicketId = roomTicketService.CreateRoomTicket(form.getRoomCode(), form.getUserId());
+            RoomTicketDomain roomTicketDomain = roomTicketService.CreateRoomTicket(form.getRoomCode(), form.getUserId());
             response = BasicResponse.builder()
                     .code(200)
                     .httpStatus(HttpStatus.OK)
                     .message("Room Ticket 생성 성공.")
-                    .result(Arrays.asList(roomTicketId))
+                    .result(Collections.emptyList())
                     .build();
         }
         catch(NoneExistingRowException e){
@@ -86,7 +88,7 @@ public class RoomTicketController {
                     .code(200)
                     .httpStatus(HttpStatus.OK)
                     .message("모든 Room Tickets 조회 성공.")
-                    .result(Arrays.asList(roomTicketDTOList))
+                    .result(Arrays.asList(Collections.emptyList()))
                     .build();
         }
         catch (NoneExistingRowException e){
@@ -122,7 +124,7 @@ public class RoomTicketController {
                     .code(200)
                     .httpStatus(HttpStatus.OK)
                     .message("Room Ticket 조회 성공")
-                    .result(Arrays.asList(roomTicketDTO))
+                    .result(Collections.emptyList())
                     .build();
 
         }
@@ -136,19 +138,130 @@ public class RoomTicketController {
                     .build();
 
         }
-//        catch (Exception e){
-//
-//            response = BasicResponse.builder()
-//                    .code(200)
-//                    .httpStatus(HttpStatus.OK)
-//                    .message("Room Ticket 조회 실패. "+e.getMessage())
-//                    .result(Collections.emptyList())
-//                    .build();
-//
-//        }
+
 
         return new ResponseEntity<>(response,response.getHttpStatus());
     }
+
+
+    @GetMapping(value="/roomTicket/{roomCode}/find")
+    public ResponseEntity<BasicResponse> GetRoomTicket2(@PathVariable("roomCode")  String roomCode, HttpServletRequest request){
+
+        BasicResponse response = new BasicResponse();
+
+        // 0. check available session
+        HttpSession session = request.getSession(false);
+        if (session == null){
+            // no available session
+            log.info("Session does not exist");
+
+            response = BasicResponse.builder()
+                    .code(404)
+                    .httpStatus(HttpStatus.NOT_FOUND)
+                    .message("Session 정보가 없습니다")
+                    .result(Collections.emptyList())
+                    .build();
+
+            return new ResponseEntity<>(response,response.getHttpStatus());
+        }
+
+        //Variables
+        UserDTO userDTO = null;
+        RoomDTO roomDTO = null;
+        List<RoomTicketDTO> roomTicketDTOList = new ArrayList<RoomTicketDTO>();
+        RoomTicketDomain roomTicketDomain = null;
+        RoomTicketDTO roomTicketDTO = null;
+
+
+
+        try{
+
+            // 1.Get User Domain by session info
+            userDTO = (UserDTO) session.getAttribute("SESSION_ID");
+
+
+            // 2.check Room id
+            RoomDomain roomDomain = roomService.findRoomByCode(roomCode);
+            roomDTO = new RoomDTO(roomDomain);
+
+            // 2-2. Collect Ticket data
+            for (RoomTicketDomain ticket: roomDomain.getRoomTickets()) {
+                roomTicketDTOList.add(new RoomTicketDTO(ticket));
+            }
+
+            // 3.Find Room Ticket
+            roomTicketDomain = roomTicketService.findRoomTicketByUserId(userDTO.getId(), roomDomain.getId());
+
+
+            //return room ticket
+            roomTicketDTO = new RoomTicketDTO(roomTicketDomain);
+            response = BasicResponse.builder()
+                    .code(200)
+                    .httpStatus(HttpStatus.OK)
+                    .message("Room Ticket 조회 성공")
+                    .result(Collections.emptyList())
+                    .build();
+
+
+            return new ResponseEntity<>(response,response.getHttpStatus());
+
+
+        }
+        catch(NoRoomTicketFoundException e){
+
+            //if no room ticket exist, generate ticket
+            // but first let's check if room is occupied
+            if(roomTicketDTOList.size() < roomDTO.getMaxNum() ){
+                //Create Room Ticket
+                roomTicketDomain= roomTicketService.CreateRoomTicket(roomDTO.getCode(), userDTO.getId());
+                roomTicketDTO = new RoomTicketDTO(roomTicketDomain);
+
+                response = BasicResponse.builder()
+                        .code(200)
+                        .httpStatus(HttpStatus.OK)
+                        .message("Room Ticket 생성 성공")
+                        .result(Collections.emptyList())
+                        .build();
+
+
+            }
+            else{
+                //response with max ticket reached
+                response = BasicResponse.builder()
+                        .code(400)
+                        .httpStatus(HttpStatus.BAD_REQUEST)
+                        .message("Room Ticket 발행 실패. Room 에 대한 발행된 Ticket의 수가 최대치를 도달했습니다.")
+                        .result(Collections.emptyList())
+                        .build();
+
+            }
+
+        }
+
+        catch (NoneExistingRowException e){
+
+            response = BasicResponse.builder()
+                    .code(200)
+                    .httpStatus(HttpStatus.OK)
+                    .message("Room Ticket 조회 실패. "+e.getMessage())
+                    .result(Collections.emptyList())
+                    .build();
+
+        }
+        catch (NoRoomFoundException | NullPointerException e){
+            response = BasicResponse.builder()
+                    .code(400)
+                    .message("Room 조회 실패. "+e.getMessage())
+                    .httpStatus(HttpStatus.BAD_REQUEST)
+                    .result(Collections.emptyList())
+                    .build();
+        }
+
+
+        return new ResponseEntity<>(response,response.getHttpStatus());
+    }
+
+
 
     @GetMapping(value="/roomTicket/{userId}/{roomCode}/getPublicAnswers")
     public ResponseEntity<BasicResponse> GetPublicAnswers(@PathVariable("userId")  Long userId,@PathVariable("roomCode")  String roomCode){

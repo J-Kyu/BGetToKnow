@@ -57,7 +57,7 @@ public class RoomTicketService {
     }
 
     @Transactional
-    public Long CreateRoomTicket(String roomCode, Long userId){
+    public RoomTicketDomain CreateRoomTicket(String roomCode, Long userId){
 
         //1. Create Room Ticket Domain
         RoomTicketDomain roomTicketDomain = new RoomTicketDomain();
@@ -91,7 +91,7 @@ public class RoomTicketService {
         //8. Register Room Ticket Domain
         roomTicketRepository.save(roomTicketDomain);
 
-        return roomTicketDomain.getId();
+        return roomTicketDomain;
     }
 
     public RoomTicketDomain findRoomTicketByUserId(Long userId, Long roomId){

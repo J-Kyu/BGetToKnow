@@ -6,6 +6,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,6 +23,7 @@ public class UserDomain {
         this.oAuthType = userDTO.getOAuthType();
         this.uuid = userDTO.getUuid();
         this.nickname = userDTO.getNickname();
+        this.genDateTime = LocalDateTime.now();
     }
 
     @Id @GeneratedValue
@@ -34,6 +36,8 @@ public class UserDomain {
     private String nickname;
 
     private String uuid;
+
+    private LocalDateTime genDateTime;
 
     @OneToMany(mappedBy = "user") //variable name
     private List<RoomTicketDomain> tickets = new ArrayList<>();
