@@ -7,12 +7,12 @@ import com.kyu.BGetToKnowYou.exception.NoRoomFoundException;
 import com.kyu.BGetToKnowYou.exception.NoRoomTicketFoundException;
 import com.kyu.BGetToKnowYou.exception.NoneExistingRowException;
 import com.kyu.BGetToKnowYou.response.BasicResponse;
-import com.kyu.BGetToKnowYou.service.PublicAnswerGroupService;
-import com.kyu.BGetToKnowYou.service.RoomService;
-import com.kyu.BGetToKnowYou.service.RoomTicketService;
-import com.kyu.BGetToKnowYou.service.UserService;
+import com.kyu.BGetToKnowYou.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -22,6 +22,7 @@ import javax.persistence.NoResultException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
+import org.json.simple.parser.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,6 +39,7 @@ public class RoomTicketController {
 
     private final PublicAnswerGroupService publicAnswerGroupService;
     private final UserService userService;
+
 
     @PostMapping(value="/roomTicket/new")
     public ResponseEntity<BasicResponse> create(@Valid RoomTicketForm form, BindingResult result){
@@ -199,7 +201,7 @@ public class RoomTicketController {
                     .code(200)
                     .httpStatus(HttpStatus.OK)
                     .message("Room Ticket 조회 성공")
-                    .result(Collections.emptyList())
+                    .result(Arrays.asList(roomTicketDTO))
                     .build();
 
 
@@ -261,7 +263,185 @@ public class RoomTicketController {
         return new ResponseEntity<>(response,response.getHttpStatus());
     }
 
+    @GetMapping(value="/roomTicketAndRoomInfo/{roomCode}/find")
+    public ResponseEntity<BasicResponse> GetRoomTicketAndRoomInfo(@PathVariable("roomCode")  String roomCode, HttpServletRequest request){
 
+        BasicResponse response = new BasicResponse();
+
+        // 0. check available session
+        HttpSession session = request.getSession(false);
+        if (session == null){
+            // no available session
+            log.info("Session does not exist");
+
+            response = BasicResponse.builder()
+                    .code(404)
+                    .httpStatus(HttpStatus.NOT_FOUND)
+                    .message("Session 정보가 없습니다")
+                    .result(Collections.emptyList())
+                    .build();
+
+            return new ResponseEntity<>(response,response.getHttpStatus());
+        }
+
+        //Variables
+        UserDTO userDTO = null;
+        RoomDTO roomDTO = null;
+        List<RoomTicketDTO> roomTicketDTOList = new ArrayList<RoomTicketDTO>();
+        RoomTicketDomain roomTicketDomain = null;
+        RoomTicketDTO roomTicketDTO = null;
+
+
+
+        try{
+
+            // 1.Get User Domain by session info
+            userDTO = (UserDTO) session.getAttribute("SESSION_ID");
+
+
+            // 2.check Room id
+            RoomDomain roomDomain = roomService.findRoomByCode(roomCode);
+            roomDTO = new RoomDTO(roomDomain);
+
+            // 2-2. Collect Ticket data
+            for (RoomTicketDomain ticket: roomDomain.getRoomTickets()) {
+                roomTicketDTOList.add(new RoomTicketDTO(ticket));
+            }
+
+            // 3.Find Room Ticket
+            roomTicketDomain = roomTicketService.findRoomTicketByUserId(userDTO.getId(), roomDomain.getId());
+
+
+            //return room ticket
+            roomTicketDTO = new RoomTicketDTO(roomTicketDomain);
+
+            ArrayList<Object> result = new ArrayList<>();
+
+            result.add(roomTicketDTO);
+            result.add(roomDTO);
+
+
+            response = BasicResponse.builder()
+                    .code(200)
+                    .httpStatus(HttpStatus.OK)
+                    .message("Room Ticket과 Room Info 조회 성공")
+                    .result(result)
+                    .build();
+
+
+            return new ResponseEntity<>(response,response.getHttpStatus());
+
+
+        }
+        catch(NoRoomTicketFoundException e){
+
+
+                //response with max ticket reached
+                response = BasicResponse.builder()
+                        .code(400)
+                        .httpStatus(HttpStatus.BAD_REQUEST)
+                        .message("존재하지 않는 Room Ticket 입니다.")
+                        .result(Collections.emptyList())
+                        .build();
+
+        }
+
+        catch (NoneExistingRowException e){
+
+            response = BasicResponse.builder()
+                    .code(200)
+                    .httpStatus(HttpStatus.OK)
+                    .message("Room Ticket 조회 실패. "+e.getMessage())
+                    .result(Collections.emptyList())
+                    .build();
+
+        }
+        catch (NoRoomFoundException | NullPointerException e){
+            response = BasicResponse.builder()
+                    .code(400)
+                    .message("Room 조회 실패. "+e.getMessage())
+                    .httpStatus(HttpStatus.BAD_REQUEST)
+                    .result(Collections.emptyList())
+                    .build();
+        }
+
+
+        return new ResponseEntity<>(response,response.getHttpStatus());
+    }
+
+
+
+    @PostMapping(value="/roomTicket/{roomCode}/updateAnswersScore")
+    public ResponseEntity<BasicResponse> UpdateAnswersScore( @PathVariable("roomCode")  String roomCode, HttpServletRequest request, @RequestBody String body){
+        BasicResponse response = new BasicResponse();
+
+        // 0. check available session
+        HttpSession session = request.getSession(false);
+        if (session == null){
+            // no available session
+            log.info("Session does not exist");
+
+            response = BasicResponse.builder()
+                    .code(404)
+                    .httpStatus(HttpStatus.NOT_FOUND)
+                    .message("Session 정보가 없습니다")
+                    .result(Collections.emptyList())
+                    .build();
+
+            return new ResponseEntity<>(response,response.getHttpStatus());
+        }
+
+        //Variables
+        UserDTO userDTO = null;
+        RoomDTO roomDTO = null;
+        List<RoomTicketDTO> roomTicketDTOList = new ArrayList<RoomTicketDTO>();
+        RoomTicketDomain roomTicketDomain = null;
+        RoomTicketDTO roomTicketDTO = null;
+
+        try{
+
+            // 0.Get User Domain by session info
+            userDTO = (UserDTO) session.getAttribute("SESSION_ID");
+
+            // 1.Get User Domain by session info
+            userDTO = (UserDTO) session.getAttribute("SESSION_ID");
+
+
+            // 2.check Room id
+            RoomDomain roomDomain = roomService.findRoomByCode(roomCode);
+            roomDTO = new RoomDTO(roomDomain);
+
+            // 3. Update Room Ticket and Answers
+            roomTicketDomain = roomTicketService.updateAnswerScore(userDTO, roomDTO, body);
+
+            response = BasicResponse.builder()
+                    .code(200)
+                    .httpStatus(HttpStatus.OK)
+                    .message("Update 가 잘 되었습니다.")
+                    .result(Arrays.asList(new RoomTicketDTO(roomTicketDomain)))
+                    .build();
+        }
+        catch (ParseException e) {
+            response = BasicResponse.builder()
+                    .code(500)
+                    .httpStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .message("Parsing 실패")
+                    .result(Collections.emptyList())
+                    .build();
+        }
+//        catch (Exception e){
+//            response = BasicResponse.builder()
+//                    .code(500)
+//                    .httpStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .message("Internal Error. "+e.getMessage())
+//                    .result(Collections.emptyList())
+//                    .build();
+//        }
+
+
+        return new ResponseEntity<>(response,response.getHttpStatus());
+
+    }
 
     @GetMapping(value="/roomTicket/{userId}/{roomCode}/getPublicAnswers")
     public ResponseEntity<BasicResponse> GetPublicAnswers(@PathVariable("userId")  Long userId,@PathVariable("roomCode")  String roomCode){
@@ -307,27 +487,6 @@ public class RoomTicketController {
 
         return new ResponseEntity<>(response,response.getHttpStatus());
     }
-
-
-//    @GetMapping(value="/roomTicket/{userId}/{roomCode}/getPublicQuestions")
-//    public List<PublicQuestionDTO> GetPublicQuestions(@PathVariable("userId")  Long userId, @PathVariable("roomCode")  String roomCode){
-//
-//        // 1. Find Room Ticket with user Id and Room Code
-//        RoomDomain roomDomain = roomService.findRoomByCode(roomCode);
-//        RoomTicketDomain roomTicketDomain = roomTicketService.findRoomTicketByUserId(userId, roomDomain.getId());
-//
-//        // 2. Get Public Question Group from PA-Group Domain (which is from room ticket domain)
-//        PublicQuestionGroupDomain publicQuestionGroupDomain = roomTicketDomain.getPublicAnswerGroup().getPublicQuestionGroup();
-//
-//        // 3. Get Questions from Question Group
-//        List<PublicQuestionDTO> publicQuestionDTOList = new ArrayList<>();
-//        for (PublicQuestionDomain question: publicQuestionGroupDomain.getQuestions() ) {
-//            publicQuestionDTOList.add(new PublicQuestionDTO(question));
-//        }
-//
-//        return publicQuestionDTOList;
-//
-//    }
 
     @GetMapping(value="/roomTicket/{userId}/{roomCode}/getPublicQuestions")
     public ResponseEntity<BasicResponse>  GetPublicQuestions(@PathVariable("userId")  Long userId, @PathVariable("roomCode")  String roomCode){

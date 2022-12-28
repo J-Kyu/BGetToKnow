@@ -20,7 +20,6 @@ public class PublicQuestionDTO {
         this.question = question.getQuestion();
     }
 
-    @JsonIgnore
     private Long id;
 
     //type

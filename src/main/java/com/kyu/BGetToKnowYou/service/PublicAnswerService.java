@@ -27,5 +27,8 @@ public class PublicAnswerService {
 
     public PublicAnswerDomain findAnswer(Long id) {return publicAnswerRepository.findAnswer(id);}
 
+    public List<PublicAnswerDomain> findAnswerByAnswerGroupId(Long id){
+        return publicAnswerRepository.findAnswerByAnswerGroupId(id);
+    }
 
 }

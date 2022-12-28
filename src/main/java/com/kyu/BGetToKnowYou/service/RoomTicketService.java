@@ -1,13 +1,17 @@
 package com.kyu.BGetToKnowYou.service;
 
+import com.kyu.BGetToKnowYou.DTO.RoomDTO;
 import com.kyu.BGetToKnowYou.DTO.RoomTicketDTO;
-import com.kyu.BGetToKnowYou.domain.PublicAnswerGroupDomain;
-import com.kyu.BGetToKnowYou.domain.RoomDomain;
-import com.kyu.BGetToKnowYou.domain.RoomTicketDomain;
-import com.kyu.BGetToKnowYou.domain.UserDomain;
+import com.kyu.BGetToKnowYou.DTO.UserDTO;
+import com.kyu.BGetToKnowYou.domain.*;
 import com.kyu.BGetToKnowYou.exception.NoneExistingRowException;
 import com.kyu.BGetToKnowYou.respository.RoomTicketRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +21,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class RoomTicketService {
 
     private final RoomTicketRepository roomTicketRepository;
@@ -26,6 +31,9 @@ public class RoomTicketService {
     private final UserService userService;
 
     private final PublicAnswerGroupService publicAnswerGroupService;
+
+    private final PublicAnswerService publicAnswerService;
+
 
     @Transactional
     public Long join(RoomTicketDomain ticket){
@@ -88,7 +96,10 @@ public class RoomTicketService {
         //7. Register Public Answer Group
        roomTicketDomain.setPublicAnswerGroup(answerGroupDomain);
 
-        //8. Register Room Ticket Domain
+        // 8. Set Ticket State
+        roomTicketDomain.setTicketState(RoomTicketStateEnum.READY);
+
+        // 9. Register Room Ticket Domain
         roomTicketRepository.save(roomTicketDomain);
 
         return roomTicketDomain;
@@ -96,6 +107,48 @@ public class RoomTicketService {
 
     public RoomTicketDomain findRoomTicketByUserId(Long userId, Long roomId){
         return roomTicketRepository.findRoomTicketWithUserIdAndRoomId(userId,roomId);
+    }
+
+    public RoomTicketDomain updateAnswerScore(UserDTO userDTO, RoomDTO roomDTO, String body) throws ParseException {
+
+        // 1. Find Room Ticket
+        RoomTicketDomain roomTicketDomain = this.findRoomTicketByUserId(userDTO.getId(), roomDTO.getId());
+        // 2. Get PublicAnswer Group Domain
+        PublicAnswerGroupDomain publicAnswerGroupDomain = roomTicketDomain.getPublicAnswerGroup();
+
+        // 3. Parse Body String
+        JSONParser jsonParse = new JSONParser();
+        JSONArray jsonArray = (JSONArray) jsonParse.parse(body);
+
+        // 4. Get Answer Domain from Public Answer Group Domain
+        List<PublicAnswerDomain> publicAnswerDomainList = publicAnswerService.findAnswerByAnswerGroupId(publicAnswerGroupDomain.getId());
+
+        // 5. Update Answers Score
+        for (Object o : jsonArray) {
+            JSONObject questionAndAnswer = (JSONObject) o;
+
+            Long targetQuestionId = Long.valueOf(String.valueOf(questionAndAnswer.get("questionId")));
+            int score = Integer.parseInt(String.valueOf(questionAndAnswer.get("answerScore")));
+
+            for (PublicAnswerDomain answerDomain : publicAnswerDomainList) {
+
+                log.info(answerDomain.getQuestion().getId().toString() + " <---> " + targetQuestionId.toString());
+
+                if (answerDomain.getQuestion().getId() == targetQuestionId) {
+                    answerDomain.setScore(score);
+                    log.info("Updated Score: " + answerDomain.getId());
+                    log.info("New Value: " + answerDomain.getScore());
+                    break;
+                }
+
+            }
+        }
+
+        // 6. Update Room Ticket State
+        roomTicketDomain.setTicketState(RoomTicketStateEnum.DONE);
+
+        return roomTicketDomain;
+
     }
 
 }

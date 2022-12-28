@@ -16,6 +16,9 @@ public class RoomTicketDomain {
     @Column(name="roomTicket_id")
     private Long id;
 
+    @Enumerated(EnumType.STRING)
+    private RoomTicketStateEnum ticketState;
+
     @ManyToOne
     @JoinColumn(name = "user_id") //column table name
     private UserDomain user;
