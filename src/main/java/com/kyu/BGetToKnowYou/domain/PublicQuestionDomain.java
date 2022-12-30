@@ -18,7 +18,7 @@ public class PublicQuestionDomain {
 
     //type
     @Enumerated(EnumType.STRING)
-    private PublicQuestionTypeEnum questionType;
+    private QuestionCategoryEnum questionCategory;
 
 
     //question string

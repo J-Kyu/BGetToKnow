@@ -120,13 +120,13 @@ public class RoomTicketController {
             // 3.Find Room Ticket
             RoomTicketDomain roomTicketDomain = roomTicketService.findRoomTicketByUserId(userId, roomDomain.getId());
 
-            RoomTicketDTO roomTicketDTO = new RoomTicketDTO(roomTicketDomain);
+            RoomTicketDTO roomTicketDTO = new RoomTicketDTO(roomTicketDomain, new RoomDTO(roomDomain));
 
             response = BasicResponse.builder()
                     .code(200)
                     .httpStatus(HttpStatus.OK)
                     .message("Room Ticket 조회 성공")
-                    .result(Collections.emptyList())
+                    .result(Arrays.asList(roomTicketDTO))
                     .build();
 
         }
@@ -188,7 +188,7 @@ public class RoomTicketController {
 
             // 2-2. Collect Ticket data
             for (RoomTicketDomain ticket: roomDomain.getRoomTickets()) {
-                roomTicketDTOList.add(new RoomTicketDTO(ticket));
+                roomTicketDTOList.add(new RoomTicketDTO(ticket, roomDTO));
             }
 
             // 3.Find Room Ticket
@@ -196,7 +196,7 @@ public class RoomTicketController {
 
 
             //return room ticket
-            roomTicketDTO = new RoomTicketDTO(roomTicketDomain);
+            roomTicketDTO = new RoomTicketDTO(roomTicketDomain, roomDTO);
             response = BasicResponse.builder()
                     .code(200)
                     .httpStatus(HttpStatus.OK)
@@ -216,7 +216,7 @@ public class RoomTicketController {
             if(roomTicketDTOList.size() < roomDTO.getMaxNum() ){
                 //Create Room Ticket
                 roomTicketDomain= roomTicketService.CreateRoomTicket(roomDTO.getCode(), userDTO.getId());
-                roomTicketDTO = new RoomTicketDTO(roomTicketDomain);
+                roomTicketDTO = new RoomTicketDTO(roomTicketDomain, roomDTO);
 
                 response = BasicResponse.builder()
                         .code(200)
@@ -263,8 +263,8 @@ public class RoomTicketController {
         return new ResponseEntity<>(response,response.getHttpStatus());
     }
 
-    @GetMapping(value="/roomTicketAndRoomInfo/{roomCode}/find")
-    public ResponseEntity<BasicResponse> GetRoomTicketAndRoomInfo(@PathVariable("roomCode")  String roomCode, HttpServletRequest request){
+    @GetMapping(value="/roomTicketList/findAll")
+    public ResponseEntity<BasicResponse> GetAllRoomTickets(HttpServletRequest request){
 
         BasicResponse response = new BasicResponse();
 
@@ -286,46 +286,20 @@ public class RoomTicketController {
 
         //Variables
         UserDTO userDTO = null;
-        RoomDTO roomDTO = null;
-        List<RoomTicketDTO> roomTicketDTOList = new ArrayList<RoomTicketDTO>();
-        RoomTicketDomain roomTicketDomain = null;
-        RoomTicketDTO roomTicketDTO = null;
-
-
 
         try{
 
             // 1.Get User Domain by session info
             userDTO = (UserDTO) session.getAttribute("SESSION_ID");
 
-
-            // 2.check Room id
-            RoomDomain roomDomain = roomService.findRoomByCode(roomCode);
-            roomDTO = new RoomDTO(roomDomain);
-
-            // 2-2. Collect Ticket data
-            for (RoomTicketDomain ticket: roomDomain.getRoomTickets()) {
-                roomTicketDTOList.add(new RoomTicketDTO(ticket));
-            }
-
-            // 3.Find Room Ticket
-            roomTicketDomain = roomTicketService.findRoomTicketByUserId(userDTO.getId(), roomDomain.getId());
-
-
-            //return room ticket
-            roomTicketDTO = new RoomTicketDTO(roomTicketDomain);
-
-            ArrayList<Object> result = new ArrayList<>();
-
-            result.add(roomTicketDTO);
-            result.add(roomDTO);
+            List<RoomTicketDTO> roomTicketDTOList = roomTicketService.findAllRoomTicketsByUserId(userDTO.getId());
 
 
             response = BasicResponse.builder()
                     .code(200)
                     .httpStatus(HttpStatus.OK)
                     .message("Room Ticket과 Room Info 조회 성공")
-                    .result(result)
+                    .result(new ArrayList<Object>(roomTicketDTOList))
                     .build();
 
 
@@ -418,7 +392,7 @@ public class RoomTicketController {
                     .code(200)
                     .httpStatus(HttpStatus.OK)
                     .message("Update 가 잘 되었습니다.")
-                    .result(Arrays.asList(new RoomTicketDTO(roomTicketDomain)))
+                    .result(Arrays.asList(new RoomTicketDTO(roomTicketDomain,roomDTO)))
                     .build();
         }
         catch (ParseException e) {

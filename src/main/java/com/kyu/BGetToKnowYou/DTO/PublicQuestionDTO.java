@@ -3,6 +3,7 @@ package com.kyu.BGetToKnowYou.DTO;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.kyu.BGetToKnowYou.domain.PublicQuestionDomain;
 import com.kyu.BGetToKnowYou.domain.PublicQuestionTypeEnum;
+import com.kyu.BGetToKnowYou.domain.QuestionCategoryEnum;
 import lombok.Getter;
 
 import javax.persistence.EnumType;
@@ -16,8 +17,9 @@ public class PublicQuestionDTO {
     }
     public PublicQuestionDTO(PublicQuestionDomain question){
         this.id = question.getId();
-        this.questionType = question.getQuestionType();
+//        this.questionType = question.getQuestionType();
         this.question = question.getQuestion();
+        this.questionCategory = question.getQuestionCategory();
     }
 
     private Long id;
@@ -25,6 +27,9 @@ public class PublicQuestionDTO {
     //type
     @Enumerated(EnumType.STRING)
     private PublicQuestionTypeEnum questionType;
+
+    @Enumerated(EnumType.STRING)
+    private QuestionCategoryEnum questionCategory;
 
 
     //question string

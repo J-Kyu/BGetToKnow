@@ -27,6 +27,12 @@ public class RoomTicketRepository {
                 .getResultList();
     }
 
+    public List<RoomTicketDomain> findAllRoomTicketsByUserId(Long id){
+        return em.createQuery("select rt from RoomTicketDomain rt where rt.user.id = :userId", RoomTicketDomain.class)
+                .setParameter("userId", id)
+                .getResultList();
+    }
+
     public RoomTicketDomain findRoomTicketWithUserIdAndRoomId(Long userId, Long roomId){
 
         RoomTicketDomain roomTicketDomain = new RoomTicketDomain();

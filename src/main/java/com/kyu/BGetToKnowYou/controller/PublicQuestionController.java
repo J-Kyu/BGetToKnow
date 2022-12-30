@@ -30,7 +30,7 @@ public class PublicQuestionController {
 
         PublicQuestionDomain question = new PublicQuestionDomain();
         question.setQuestion(form.getQuestion());
-        question.setQuestionType(form.getType());
+//        question.setQuestionType(form.getType());
         publicQuestionService.join(question);
 
         return "redirect:/";

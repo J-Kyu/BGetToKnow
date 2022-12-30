@@ -19,6 +19,8 @@ public class PublicQuestionGroupDomain {
     @Enumerated(EnumType.STRING)
     private RoomTypeEnum questionGroupType;
 
+    private int questionCategoryNum;
+
     @OneToMany(mappedBy = "publicQuestionGroup")
     private List<PublicQuestionDomain> questions = new ArrayList<>();
 }

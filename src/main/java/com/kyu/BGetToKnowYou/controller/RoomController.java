@@ -185,9 +185,17 @@ public class RoomController {
         }
         catch (NoneExistingRowException e){
             response = BasicResponse.builder()
-                    .code(200)
+                    .code(400)
                     .message("Public Questions 조회 실패. "+e.getMessage())
-                    .httpStatus(HttpStatus.OK)
+                    .httpStatus(HttpStatus.BAD_REQUEST)
+                    .result(Collections.emptyList())
+                    .build();
+        }
+        catch (NoRoomFoundException e){
+            response = BasicResponse.builder()
+                    .code(400)
+                    .message("Room 조회 실패. "+e.getMessage())
+                    .httpStatus(HttpStatus.BAD_REQUEST)
                     .result(Collections.emptyList())
                     .build();
         }

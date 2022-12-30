@@ -11,9 +11,10 @@ import javax.persistence.Enumerated;
 @Getter
 public class RoomTicketDTO {
 
-    public RoomTicketDTO(RoomTicketDomain ticket){
+    public RoomTicketDTO(RoomTicketDomain ticket, RoomDTO roomDTO){
         this.id = ticket.getId();
         this.ticketState = ticket.getTicketState();
+        this.roomDTO = roomDTO;
     }
 
     @JsonIgnore
@@ -21,5 +22,7 @@ public class RoomTicketDTO {
 
     @Enumerated(EnumType.STRING)
     private RoomTicketStateEnum ticketState;
+
+    private RoomDTO roomDTO;
 
 }

@@ -23,6 +23,9 @@ public class UserService {
 
     private final UserRepository userRepository;
 
+    private final RoomService roomService;
+
+
     @Transactional
     public Long join(UserDomain user){
         validateDuplicateUser(user);
@@ -79,7 +82,8 @@ public class UserService {
         // Search Room Ticket
         List<RoomTicketDTO> roomTicketDTOList = new ArrayList<>();
         for ( RoomTicketDomain ticket: user.getTickets() ) {
-            roomTicketDTOList.add(new RoomTicketDTO(ticket));
+            RoomDTO roomDTO = new RoomDTO(roomService.findOne(ticket.getRoom().getId()));
+            roomTicketDTOList.add(new RoomTicketDTO(ticket, roomDTO));
         }
 
         return roomTicketDTOList;

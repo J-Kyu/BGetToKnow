@@ -53,7 +53,28 @@ public class RoomTicketService {
         }
 
         for (RoomTicketDomain ticket: roomTicketDomainList) {
-            roomTicketDTOList.add(new RoomTicketDTO(ticket));
+
+            RoomDTO roomDTO = new RoomDTO(roomService.findOne(ticket.getRoom().getId()));
+            roomTicketDTOList.add(new RoomTicketDTO(ticket, roomDTO));
+        }
+
+        return roomTicketDTOList;
+    }
+
+    public List<RoomTicketDTO> findAllRoomTicketsByUserId(Long id){
+
+        List<RoomTicketDTO> roomTicketDTOList = new ArrayList<>();
+
+        List<RoomTicketDomain> roomTicketDomainList = roomTicketRepository.findAllRoomTicketsByUserId(id);
+        //Exception Check
+        if (roomTicketDomainList == null){
+            throw new NoneExistingRowException("There is no Room Ticket Registered.");
+        }
+
+        for (RoomTicketDomain ticket: roomTicketDomainList) {
+
+            RoomDTO roomDTO = new RoomDTO(roomService.findOne(ticket.getRoom().getId()));
+            roomTicketDTOList.add(new RoomTicketDTO(ticket, roomDTO));
         }
 
         return roomTicketDTOList;
