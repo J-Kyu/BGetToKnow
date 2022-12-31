@@ -23,7 +23,7 @@ public class PublicAnswerGroupRepository {
     public PublicAnswerGroupDomain findPublicAnswerGroup(Long id){return em.find(PublicAnswerGroupDomain.class, id);}
 
     public List<PublicAnswerGroupDomain> findAllPublicAnswerGroup(){
-        return em.createQuery("select g from PublicAnswerGroup g", PublicAnswerGroupDomain.class)
+        return em.createQuery("select g from PublicAnswerGroupDomain g", PublicAnswerGroupDomain.class)
                 .getResultList();
     }
 

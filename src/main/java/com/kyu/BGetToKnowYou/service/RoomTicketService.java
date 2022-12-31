@@ -34,6 +34,9 @@ public class RoomTicketService {
 
     private final PublicAnswerService publicAnswerService;
 
+    private final QuestionResultService questionResultService;
+
+
 
     @Transactional
     public Long join(RoomTicketDomain ticket){
@@ -120,7 +123,13 @@ public class RoomTicketService {
         // 8. Set Ticket State
         roomTicketDomain.setTicketState(RoomTicketStateEnum.READY);
 
-        // 9. Register Room Ticket Domain
+        // 9. Create Question Result Domain
+        QuestionResultDomain questionResultDomain = questionResultService.CreateQuestionResult(QuestionResultType.NONE);
+
+        // 10. Register to Room Ticket Domain
+        roomTicketDomain.setQuestionResultDomain(questionResultDomain);
+
+        // 11. Register Room Ticket Domain
         roomTicketRepository.save(roomTicketDomain);
 
         return roomTicketDomain;

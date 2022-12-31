@@ -222,7 +222,7 @@ public class RoomTicketController {
                         .code(200)
                         .httpStatus(HttpStatus.OK)
                         .message("Room Ticket 생성 성공")
-                        .result(Collections.emptyList())
+                        .result(Arrays.asList(roomTicketDTO))
                         .build();
 
 
