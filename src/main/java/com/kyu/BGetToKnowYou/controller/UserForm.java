@@ -16,6 +16,8 @@ public class UserForm {
 
     private String uuid;
 
+    private String accessToken;
+
     @Enumerated(EnumType.STRING)
     private OAuthTypeEnum oAuthType;
 

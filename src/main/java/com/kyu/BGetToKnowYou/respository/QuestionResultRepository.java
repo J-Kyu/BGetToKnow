@@ -16,9 +16,7 @@ public class QuestionResultRepository {
     private final EntityManager em;
 
     public void save(QuestionResultDomain questionResultDomain){em.persist(questionResultDomain);}
-
     public QuestionResultDomain findOne(Long id) {return em.find(QuestionResultDomain.class, id);}
-
     public List<QuestionResultDomain> findAll(){
         return em.createQuery("select m from QuestionResultDomain m", QuestionResultDomain.class)
                 .getResultList();

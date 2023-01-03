@@ -24,19 +24,20 @@ public class UserDomain {
         this.uuid = userDTO.getUuid();
         this.nickname = userDTO.getNickname();
         this.genDateTime = LocalDateTime.now();
+        this.accessToken = userDTO.getAccessToken();
     }
 
     @Id @GeneratedValue
     @Column(name="user_id")
     private Long id;
 
-    @Enumerated(EnumType.STRING)
-    private OAuthTypeEnum oAuthType;
-
     private String nickname;
 
+    @Enumerated(EnumType.STRING)
+    private OAuthTypeEnum oAuthType;
     private String uuid;
 
+    private String accessToken;
     private LocalDateTime genDateTime;
 
     @OneToMany(mappedBy = "user") //variable name
@@ -45,8 +46,5 @@ public class UserDomain {
     @OneToMany(mappedBy = "adminUser")
     private List<RoomDomain> rooms = new ArrayList<>();
 
-    public void AddRoomTicket(RoomTicketDomain ticket){
-        this.tickets.add(ticket);
-    }
 
 }

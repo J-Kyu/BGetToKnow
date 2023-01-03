@@ -1,6 +1,7 @@
 package com.kyu.BGetToKnowYou.controller;
 
 import com.kyu.BGetToKnowYou.DTO.PublicQuestionDTO;
+import com.kyu.BGetToKnowYou.DTO.QuestionResultDTO;
 import com.kyu.BGetToKnowYou.DTO.RoomDTO;
 import com.kyu.BGetToKnowYou.DTO.UserDTO;
 import com.kyu.BGetToKnowYou.domain.RoomDomain;
@@ -8,6 +9,7 @@ import com.kyu.BGetToKnowYou.domain.RoomStateEnum;
 import com.kyu.BGetToKnowYou.domain.RoomTypeEnum;
 import com.kyu.BGetToKnowYou.domain.UserDomain;
 import com.kyu.BGetToKnowYou.exception.NoRoomFoundException;
+import com.kyu.BGetToKnowYou.exception.NoRoomTicketFoundException;
 import com.kyu.BGetToKnowYou.exception.NoneExistingRowException;
 import com.kyu.BGetToKnowYou.response.BasicResponse;
 import com.kyu.BGetToKnowYou.service.RoomService;
@@ -78,7 +80,7 @@ public class RoomController {
             RoomDTO roomDTO = new RoomDTO(form.getMaxNum(),form.getRoomType(),form.getReleaseDateTime());
 
 
-            UserDomain userDomain = userService.findUserDomain(userDTO.getId());
+            UserDomain userDomain = userService.findOne(userDTO.getId());
             String roomCode = roomService.CreateRoom(roomDTO, userDomain);
 
             response = BasicResponse.builder()
@@ -97,14 +99,14 @@ public class RoomController {
                     .result(Collections.emptyList())
                     .build();
         }
-        catch (Exception e){
-            response = BasicResponse.builder()
-                    .code(400)
-                    .httpStatus(HttpStatus.BAD_REQUEST)
-                    .message("알수없는 Error 발생. "+e.getMessage())
-                    .result(Collections.emptyList())
-                    .build();
-        }
+//        catch (Exception e){
+//            response = BasicResponse.builder()
+//                    .code(400)
+//                    .httpStatus(HttpStatus.BAD_REQUEST)
+//                    .message("알수없는 Error 발생. "+e.getMessage())
+//                    .result(Collections.emptyList())
+//                    .build();
+//        }
 
 
         return new ResponseEntity<>(response,response.getHttpStatus());
@@ -242,4 +244,64 @@ public class RoomController {
 
     }
 
+
+    @GetMapping("/room/{code}/getRoomResult")
+    public ResponseEntity<BasicResponse> GetRoomResult(@PathVariable("code")  String roomCode, HttpServletRequest request){
+
+        BasicResponse response = new BasicResponse();
+
+        // 0. check available session
+        HttpSession session = request.getSession(false);
+        if (session == null){
+            // no available session
+            log.info("Session does not exist");
+
+            response = BasicResponse.builder()
+                    .code(404)
+                    .httpStatus(HttpStatus.NOT_FOUND)
+                    .message("Session 정보가 없습니다")
+                    .result(Collections.emptyList())
+                    .build();
+
+            return new ResponseEntity<>(response,response.getHttpStatus());
+        }
+
+
+        try{
+            List<QuestionResultDTO> questionResultDTOList = new ArrayList<>();
+
+            // 1.Get User Domain by session info
+            UserDTO userDTO = (UserDTO) session.getAttribute("SESSION_ID");
+
+            questionResultDTOList = roomService.GetRoomResult(roomCode, userDTO.getId());
+
+            response = BasicResponse.builder()
+                    .code(200)
+                    .httpStatus(HttpStatus.OK)
+                    .message("Room Result 정보 조회 성공")
+                    .result(new ArrayList<>(questionResultDTOList))
+                    .build();
+        }
+        catch (NoRoomTicketFoundException e){
+            response = BasicResponse.builder()
+                    .code(404)
+                    .httpStatus(HttpStatus.NOT_FOUND)
+                    .message("Room Ticket 및 Room code 불일치. " +e.getMessage())
+                    .result(Collections.emptyList())
+                    .build();
+        }
+        catch (NoRoomFoundException e){
+            response = BasicResponse.builder()
+                    .code(404)
+                    .httpStatus(HttpStatus.NOT_FOUND)
+                    .message(e.getMessage())
+                    .result(Collections.emptyList())
+                    .build();
+        }
+
+
+        return new ResponseEntity<>(response,response.getHttpStatus());
+
+
+    }
 }

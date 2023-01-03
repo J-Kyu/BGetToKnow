@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Getter
@@ -11,8 +12,7 @@ import javax.persistence.*;
 @Table(name = "RoomTickets")
 public class RoomTicketDomain {
 
-    @Id
-    @GeneratedValue
+    @Id@GeneratedValue
     @Column(name="roomTicket_id")
     private Long id;
 
@@ -35,5 +35,9 @@ public class RoomTicketDomain {
     @ManyToOne
     @JoinColumn(name = "room_id")
     private RoomDomain room;
+
+    public List<PublicAnswerDomain> GetPublicAnswerDomain(){
+        return publicAnswerGroup.getAnswers();
+    }
 
 }

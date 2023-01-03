@@ -16,11 +16,13 @@ public class UserDTO {
 
     public UserDTO(){}
 
-    public UserDTO(String nickname, OAuthTypeEnum type, String uuid){
+    public UserDTO(String nickname, OAuthTypeEnum type, String uuid, String accessToken){
         this.nickname = nickname;
         this.oAuthType = type;
         this.uuid = uuid;
         this.genDateTime = LocalDateTime.now();
+        this.accessToken = accessToken;
+
     }
     public UserDTO(UserDomain userDomain){
         this.id = userDomain.getId();
@@ -28,6 +30,7 @@ public class UserDTO {
         this.uuid = userDomain.getUuid();
         this.oAuthType = userDomain.getOAuthType();
         this.genDateTime = userDomain.getGenDateTime();
+        this.accessToken = userDomain.getAccessToken();
     }
 
     @JsonIgnore
@@ -41,5 +44,7 @@ public class UserDTO {
 
     @Enumerated(EnumType.STRING)
     private OAuthTypeEnum oAuthType;
+
+    private String accessToken;
 
 }

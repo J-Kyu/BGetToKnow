@@ -1,27 +1,22 @@
 package com.kyu.BGetToKnowYou.service;
 
-import com.kyu.BGetToKnowYou.DTO.PublicQuestionDTO;
-import com.kyu.BGetToKnowYou.DTO.PublicQuestionGroupDTO;
-import com.kyu.BGetToKnowYou.DTO.RoomDTO;
-import com.kyu.BGetToKnowYou.DTO.UserDTO;
-import com.kyu.BGetToKnowYou.domain.PublicQuestionDomain;
-import com.kyu.BGetToKnowYou.domain.PublicQuestionGroupDomain;
-import com.kyu.BGetToKnowYou.domain.RoomDomain;
-import com.kyu.BGetToKnowYou.domain.UserDomain;
+import com.kyu.BGetToKnowYou.DTO.*;
+import com.kyu.BGetToKnowYou.domain.*;
+import com.kyu.BGetToKnowYou.exception.NoRoomTicketFoundException;
 import com.kyu.BGetToKnowYou.exception.NoneExistingRowException;
 import com.kyu.BGetToKnowYou.respository.RoomRepository;
-import com.kyu.BGetToKnowYou.respository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.NoResultException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RoomService {
 
 
@@ -123,6 +118,57 @@ public class RoomService {
         roomRepository.save(roomDomain);
 
         return  roomCode;
+    }
+
+
+    public List<QuestionResultDTO> GetRoomResult(String roomCode, Long userId){
+
+        // 1. find room domain
+        RoomDomain roomDomain = this.findRoomByCode(roomCode);
+
+        log.info(roomDomain.getCode());
+
+        //1-1. Check if user has given room ticket
+        boolean found = false;
+        for (RoomTicketDomain ticket: roomDomain.getRoomTickets()) {
+
+            if (ticket.getUser().getId().equals(userId) == true){
+                found = true;
+                break;
+            }
+        }
+
+        if (found == false){
+            throw new NoRoomTicketFoundException("Given Room Code does not hold the user ticket");
+        }
+
+        List<QuestionResultDTO> questionResultDTOList = new ArrayList<>();
+
+        for (RoomTicketDomain ticket: roomDomain.getRoomTickets()) {
+
+            //Setting Question Result Data
+            QuestionResultDTO questionResultDTO = new QuestionResultDTO();
+            questionResultDTO.setQuestionResultType(ticket.getQuestionResultDomain().getQuestionResultType());
+            questionResultDTO.setUserNickname(ticket.getUser().getNickname());
+
+            for (CategoryResultDomain crd : ticket.getQuestionResultDomain().getCategoryResultList()){
+
+                // setting  category dto
+                CategoryResultDTO categoryResultDTO = new CategoryResultDTO();
+                categoryResultDTO.setQuestionCategory(crd.getQuestionCategory());
+                categoryResultDTO.setAverageScore(crd.getAverageScore());
+
+                // add category dto
+                questionResultDTO.getCategoryResultDTOList().add(categoryResultDTO);
+            }
+
+            questionResultDTOList.add(questionResultDTO);
+        }
+
+
+
+        return questionResultDTOList;
+
     }
 
 }

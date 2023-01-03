@@ -23,10 +23,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import org.json.simple.parser.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+
+import java.util.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -39,6 +37,8 @@ public class RoomTicketController {
 
     private final PublicAnswerGroupService publicAnswerGroupService;
     private final UserService userService;
+
+    private final CategoryResultService categoryResultService;
 
 
     @PostMapping(value="/roomTicket/new")
@@ -112,7 +112,7 @@ public class RoomTicketController {
 
         try{
             // 1.check User id
-            userService.findUserDomain(userId);
+            userService.findOne(userId);
 
             // 2.check Room id
             RoomDomain roomDomain = roomService.findRoomByCode(roomCode);
@@ -374,12 +374,8 @@ public class RoomTicketController {
 
         try{
 
-            // 0.Get User Domain by session info
-            userDTO = (UserDTO) session.getAttribute("SESSION_ID");
-
             // 1.Get User Domain by session info
             userDTO = (UserDTO) session.getAttribute("SESSION_ID");
-
 
             // 2.check Room id
             RoomDomain roomDomain = roomService.findRoomByCode(roomCode);
@@ -425,7 +421,7 @@ public class RoomTicketController {
         try{
 
             // 0. Check User Id
-            userService.findUserDomain(userId);
+            userService.findOne(userId);
 
             // 1. Find Room Ticket with user id and Room Code
             RoomDomain roomDomain = roomService.findRoomByCode(roomCode);
@@ -470,7 +466,7 @@ public class RoomTicketController {
         try{
 
             // 0. Check User Id
-            userService.findUserDomain(userId);
+            userService.findOne(userId);
 
             // 1. Find Room Ticket with user Id and Room Code
             RoomDomain roomDomain = roomService.findRoomByCode(roomCode);

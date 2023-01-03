@@ -5,6 +5,7 @@ import com.kyu.BGetToKnowYou.DTO.RoomTicketDTO;
 import com.kyu.BGetToKnowYou.DTO.UserDTO;
 import com.kyu.BGetToKnowYou.domain.*;
 import com.kyu.BGetToKnowYou.exception.NoneExistingRowException;
+import com.kyu.BGetToKnowYou.response.BasicResponse;
 import com.kyu.BGetToKnowYou.respository.RoomTicketRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,11 +13,12 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +38,7 @@ public class RoomTicketService {
 
     private final QuestionResultService questionResultService;
 
+    private final CategoryResultService categoryResultService;
 
 
     @Transactional
@@ -105,7 +108,7 @@ public class RoomTicketService {
         roomTicketDomain.setRoom(roomDomain);
 
         //4. Search User Domain
-        UserDomain userDomain = userService.findUserDomain(userId);
+        UserDomain userDomain = userService.findOne(userId);
         //Exception Check
         if (userDomain == null){
             throw new NoneExistingRowException("There is no User id: "+userId);
@@ -160,14 +163,10 @@ public class RoomTicketService {
             Long targetQuestionId = Long.valueOf(String.valueOf(questionAndAnswer.get("questionId")));
             int score = Integer.parseInt(String.valueOf(questionAndAnswer.get("answerScore")));
 
+            //update each answer domain
             for (PublicAnswerDomain answerDomain : publicAnswerDomainList) {
-
-                log.info(answerDomain.getQuestion().getId().toString() + " <---> " + targetQuestionId.toString());
-
                 if (answerDomain.getQuestion().getId() == targetQuestionId) {
                     answerDomain.setScore(score);
-                    log.info("Updated Score: " + answerDomain.getId());
-                    log.info("New Value: " + answerDomain.getScore());
                     break;
                 }
 
@@ -177,8 +176,57 @@ public class RoomTicketService {
         // 6. Update Room Ticket State
         roomTicketDomain.setTicketState(RoomTicketStateEnum.DONE);
 
+        // 7. Calculate Result
+        this.CalculateResult(userDTO.getId(), roomDTO.getId());
+
         return roomTicketDomain;
 
     }
+
+    private Boolean CalculateResult(Long useId, Long roomId){
+        // 1. Find Room Ticket
+        RoomTicketDomain roomTicketDomain = this.findRoomTicketByUserId(useId, roomId);
+
+        // 1-1. Check if Ticket is ready
+        if (roomTicketDomain.getTicketState() != RoomTicketStateEnum.DONE){
+            return false;
+        }
+
+        //2. Find Answers
+        List<PublicAnswerDomain> publicAnswerDomainList = roomTicketDomain.GetPublicAnswerDomain();
+
+        //3. Get Question Result
+        QuestionResultDomain questionResultDomain = roomTicketDomain.getQuestionResultDomain();
+        List<CategoryResultDomain> categoryResultDomainList = questionResultDomain.getCategoryResultList();
+
+        // 4. calculate
+        Map<QuestionCategoryEnum,Integer> answerCount = new HashMap<>();
+        Map<QuestionCategoryEnum,Integer> answerScore = new HashMap<>();
+
+        // calculate each score with question category
+        for (PublicAnswerDomain pad:publicAnswerDomainList) {
+            QuestionCategoryEnum qce = pad.getQuestion().getQuestionCategory();
+
+            if(answerCount.get(qce) == null){
+                answerCount.put(qce,1);
+                answerScore.put(qce,pad.getScore());
+            }
+            else{
+                answerCount.put( qce,answerCount.get(qce)+1); //add count
+                answerScore.put( qce,answerScore.get(qce)+pad.getScore()); //add score
+            }
+        }
+
+        // Apply to Question Result: Category Result
+
+        // Find each category
+        for (CategoryResultDomain crd : categoryResultDomainList) {
+            float avgScore = answerScore.get(crd.getQuestionCategory()) / (float)answerCount.get(crd.getQuestionCategory());
+            categoryResultService.updateCategoryAverageScore(crd.getId(),avgScore);
+        }
+
+        return true;
+    }
+
 
 }

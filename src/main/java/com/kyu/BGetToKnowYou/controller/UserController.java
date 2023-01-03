@@ -58,7 +58,7 @@ public class UserController {
 
 
 
-        UserDTO userDTO = new UserDTO(form.getNickname(),form.getOAuthType(),form.getUuid());
+        UserDTO userDTO = new UserDTO(form.getNickname(),form.getOAuthType(),form.getUuid(), form.getAccessToken());
 
         try {
             userService.createUser(userDTO);
@@ -216,7 +216,14 @@ public class UserController {
             // 1. get uuid and userDTO
             uuid = form.getOAuthType().toString() + "_" + form.getUuid();
             log.info(uuid);
-            UserDTO userDTO = userService.finUserDTOByUUID(uuid);
+            UserDomain userDomain = userService.finUserDomainByUUID(uuid);
+
+            //update user access token, if it's either kakao or google
+            if (form.getOAuthType() !=  OAuthTypeEnum.DEFAULT) {
+                userService.updateUserAccessToken(userDomain.getId(), form.getAccessToken());
+            }
+
+            UserDTO userDTO = new UserDTO(userDomain);
 
             //create session
             HttpSession session = request.getSession(true);
@@ -237,7 +244,7 @@ public class UserController {
             // 2. If given uuid not existing, let's SIGN UP
 
             uuid = form.getOAuthType().toString()+"_"+form.getUuid();
-            UserDTO userDTO = new UserDTO(form.getNickname(),form.getOAuthType(),uuid);
+            UserDTO userDTO = new UserDTO(form.getNickname(),form.getOAuthType(),uuid,form.getAccessToken());
             userService.createUser(userDTO);
 
             //create session id
@@ -272,8 +279,8 @@ public class UserController {
 
    }
 
-    @PostMapping("/user/logOut")
-    public ResponseEntity<BasicResponse> UserLogOut(UserForm form, BindingResult result,  HttpServletRequest request){
+    @GetMapping("/user/logOut")
+    public ResponseEntity<BasicResponse> UserLogOut(HttpServletRequest request){
         BasicResponse response = new BasicResponse();
 
         //Sign Out

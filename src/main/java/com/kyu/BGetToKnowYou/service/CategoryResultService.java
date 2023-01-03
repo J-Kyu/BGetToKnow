@@ -31,9 +31,15 @@ public class CategoryResultService {
     public List<CategoryResultDomain> findAll(){return categoryResultRepository.findAllCategoryResult();}
 
     @Transactional
-    public void updateCategoryAverageScore(long id,float score){
+    public CategoryResultDomain updateCategoryAverageScore(long id,float score){
         CategoryResultDomain categoryResultDomain = this.findOne(id);
         categoryResultDomain.setAverageScore(score);
+        return categoryResultDomain;
+    }
+
+
+    public void updateCategoryResult(){
+
     }
 
 }

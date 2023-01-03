@@ -7,6 +7,7 @@ import com.kyu.BGetToKnowYou.domain.OAuthTypeEnum;
 import com.kyu.BGetToKnowYou.domain.RoomDomain;
 import com.kyu.BGetToKnowYou.domain.RoomTicketDomain;
 import com.kyu.BGetToKnowYou.domain.UserDomain;
+import com.kyu.BGetToKnowYou.exception.NoUserFoundException;
 import com.kyu.BGetToKnowYou.exception.NoneExistingRowException;
 import com.kyu.BGetToKnowYou.respository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -99,7 +100,10 @@ public class UserService {
         return new UserDTO(user);
     }
 
-    public UserDomain findUserDomain(Long userId) {
+    public UserDomain finUserDomainByUUID(String uuid) {
+        return userRepository.findByUUID(uuid);
+    }
+    public UserDomain findOne(Long userId) {
 
         //find User
         return userRepository.findOne(userId);
@@ -118,6 +122,19 @@ public class UserService {
         }
 
         return roomDTOList;
+    }
+
+    @Transactional
+    public void updateUserAccessToken(Long id, String accessToken){
+        // find user domain
+        UserDomain userDomain = this.findOne(id);
+
+        if (userDomain == null){
+            throw new NoUserFoundException("No given user found: "+id);
+        }
+
+        //update access token
+        userDomain.setAccessToken(accessToken);;
     }
 
 }
