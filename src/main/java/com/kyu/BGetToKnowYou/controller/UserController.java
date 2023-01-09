@@ -32,7 +32,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = {"http://localhost:3000","http://192.168.35.57:3000"}, allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost","http://gettoknow.life/", "http://52.78.139.73:80","http://52.78.139.73"}, allowCredentials = "true")
 public class UserController {
 
     private final UserService userService;
@@ -231,7 +231,6 @@ public class UserController {
             session.setMaxInactiveInterval(expireTime); //30 seconds
             log.info("First Sign In-"+userDTO.getNickname());
             log.info("Session ID: "+session.getId());
-
 
             response = BasicResponse.builder()
                         .code(200)

@@ -29,7 +29,7 @@ import java.util.*;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = {"http://localhost:3000","http://192.168.35.57:3000"}, allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost","http://gettoknow.life/", "http://52.78.139.73:80","http://52.78.139.73"}, allowCredentials = "true")
 public class RoomTicketController {
 
     private final RoomTicketService roomTicketService;
