@@ -1,25 +1,15 @@
 spring:
   datasource:
-#    url: jdbc:mysql://localhost:3306/test?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
-    url: jdbc:mysql://0.0.0.0:3306/test?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
-
-    username: kyu
+    url: jdbc:h2:tcp://localhost/e:/Study/Project/BGetToKnow/BGetToKnow
+    username: j-kyu
     password: password
-    driver-class-name=com: mysql.cj.jdbc.Driver
+    driver-class-name: org.h2.Driver
   jpa:
     hibernate:
-      ddl-auto: create
-#      ddl-auto: update
+      ddl-auto: update
     properties:
       hibernate:
-#        show_sql: true
-         format_sql: true
+        format_sql: true
 server:
-  servlet:
-    session:
-      cookie:
-        domain: gettoknow.life
-        http-only: true
-        path: /
   port: 80
 
