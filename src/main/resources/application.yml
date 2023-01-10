@@ -1,18 +1,16 @@
 spring:
   datasource:
-#    url: jdbc:mysql://localhost:3306/test?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
     url: jdbc:mysql://0.0.0.0:3306/test?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
 
-    username: kyu
-    password: password
+    username:
+    password:
     driver-class-name=com: mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: create
-#      ddl-auto: update
+      ddl-auto: update
     properties:
       hibernate:
-#        show_sql: true
+        show_sql: true
          format_sql: true
 server:
   servlet:

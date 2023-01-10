@@ -32,7 +32,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = {"http://localhost","http://gettoknow.life/", "http://52.78.139.73:80","http://52.78.139.73"}, allowCredentials = "true")
+@CrossOrigin(origins = {"http://gettoknow.life/"}, allowCredentials = "true")
 public class RoomController {
 
     private final RoomService roomService;
